@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pointer made - Geometry Dash Demonlist</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+:root {
+    --bg: #0a0a0a; --surface: #111111; --card: #161616; --border: #252525;
+    --text: #e0e0e0; --sub: #777777; --accent: #4da8da; --accent-hover: #3d94c4;
+    --green: #5cb87a; --green-bg: rgba(92,184,122,0.1); --red: #e05555;
+    --gold: #c9a94e; --gold-bg: rgba(201,169,78,0.15); --silver: #b0b0b0;
+    --silver-bg: rgba(176,176,176,0.1); --bronze: #b8764a; --bronze-bg: rgba(184,118,74,0.1);
+    --copy: #3b7dd8; --copy-hover: #4d8ee6; --edit: #3b7dd8; --new: #4da8da;
+    --up: #5cb87a; --down: #e05555; --tag-bg: #1e2230; --tag-text: #89b4fa;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif; min-height:100vh; display:flex; justify-content:center; -webkit-font-smoothing:antialiased; }
+.app { width:750px; min-height:100vh; background:var(--bg); position:relative; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideUp { from { opacity:1; transform:translateY(0); } to { opacity:0; transform:translateY(-10px); } }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+@keyframes toastIn { from { opacity:0; transform:translateX(100px); } to { opacity:1; transform:translateX(0); } }
+@keyframes toastOut { from { opacity:1; transform:translateX(0); } to { opacity:0; transform:translateX(100px); } }
+.level-card { animation:fadeIn 0.3s ease forwards; }
+.level-card:nth-child(1) { animation-delay:0.02s; }
+.level-card:nth-child(2) { animation-delay:0.04s; }
+.level-card:nth-child(3) { animation-delay:0.06s; }
+.level-card:nth-child(4) { animation-delay:0.08s; }
+.level-card:nth-child(5) { animation-delay:0.10s; }
+.modal-overlay.active .modal { animation:slideDown 0.2s ease; }
+.copy-tooltip.show { animation:pulse 0.3s ease; }
+.tab-btn.active::after { content:''; display:block; width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:6px solid var(--accent); margin:8px auto -2px; }
+
+.ach-toast { position:fixed; bottom:20px; right:20px; background:var(--surface); border:1px solid var(--accent); color:var(--text); padding:12px 20px; border-radius:8px; font-size:13px; font-weight:500; z-index:9999; opacity:0; transform:translateX(100px); pointer-events:none; transition:all 0.3s ease; box-shadow:0 4px 20px rgba(77,168,218,0.3); }
+.ach-toast.show { opacity:1; transform:translateX(0); animation:toastIn 0.3s ease; }
+.ach-toast span { margin-right:6px; }
+
+.auth-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; z-index:1000; }
+.auth-modal { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:32px; width:380px; animation:slideDown 0.3s ease; }
+.auth-modal h2 { color:var(--accent); margin-bottom:24px; font-size:24px; text-align:center; }
+.auth-modal input { width:100%; padding:12px; background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:14px; margin-bottom:12px; font-family:inherit; transition:border 0.2s, box-shadow 0.2s; }
+.auth-modal input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px rgba(77,168,218,0.15); }
+.auth-modal button { width:100%; padding:12px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:14px; font-weight:600; cursor:pointer; margin-top:8px; transition:all 0.2s; }
+.auth-modal button:hover { background:var(--accent-hover); transform:translateY(-1px); box-shadow:0 4px 15px rgba(77,168,218,0.3); }
+.auth-switch { text-align:center; margin-top:16px; color:var(--sub); font-size:13px; }
+.auth-switch span { color:var(--accent); cursor:pointer; transition:color 0.2s; }
+.auth-switch span:hover { color:#fff; }
+.auth-error { color:var(--red); font-size:12px; text-align:center; margin-top:8px; animation:fadeIn 0.2s ease; }
+.logout-btn { background:var(--card); border:1px solid var(--border); padding:7px 14px; border-radius:6px; color:var(--sub); cursor:pointer; font-size:12px; transition:all 0.2s; }
+.logout-btn:hover { border-color:var(--red); color:var(--red); }
+.sign-in-btn { background:var(--accent); border:none; color:#fff; padding:7px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:500; transition:all 0.2s; }
+.sign-in-btn:hover { background:var(--accent-hover); transform:translateY(-1px); box-shadow:0 4px 12px rgba(77,168,218,0.3); }
+.guest-badge { color:var(--sub); font-size:13px; }
+
+.header { padding:22px 28px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:rgba(10,10,10,0.92); backdrop-filter:blur(12px); z-index:50; border-bottom:1px solid var(--border); }
+.header-left { display:flex; align-items:center; gap:10px; }
+.header-logo { width:8px; height:8px; background:var(--accent); border-radius:50%; box-shadow:0 0 10px rgba(77,168,218,0.6); animation:pulse 2s infinite; }
+.header-title { font-size:20px; font-weight:600; letter-spacing:0.3px; color:#fff; }
+.header-title span { color:var(--accent); }
+.header-right { display:flex; align-items:center; gap:14px; }
+.points-badge { background:var(--surface); border:1px solid var(--border); padding:7px 16px; border-radius:6px; font-size:13px; font-weight:500; letter-spacing:0.3px; transition:border 0.2s; }
+.points-badge strong { color:var(--accent); font-weight:600; }
+.avatar { width:34px; height:34px; border-radius:6px; background:var(--surface); border:1px solid var(--border); cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px; color:var(--accent); }
+.avatar:hover { border-color:var(--accent); background:#1a1a1a; transform:scale(1.05); }
+
+.tabs { display:flex; padding:0 28px; border-bottom:1px solid var(--border); background:var(--bg); position:sticky; top:77px; z-index:40; }
+.tab-btn { background:none; border:none; color:var(--sub); padding:10px 20px; font-size:13px; font-weight:500; cursor:pointer; font-family:inherit; letter-spacing:0.3px; border-bottom:2px solid transparent; transition:all 0.2s; position:relative; }
+.tab-btn:hover { color:var(--text); }
+.tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+.search-wrapper { padding:12px 28px; border-bottom:1px solid var(--border); }
+.search-input { width:100%; padding:9px 14px; background:var(--surface); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:13px; font-family:inherit; outline:none; letter-spacing:0.3px; transition:all 0.2s; }
+.search-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(77,168,218,0.1); }
+.search-input::placeholder { color:var(--sub); }
+.content { padding:14px 28px 120px; min-height:calc(100vh - 200px); }
+.list-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.list-header-label { font-size:11px; text-transform:uppercase; letter-spacing:1.2px; color:var(--sub); font-weight:600; }
+.legacy-date { font-size:10px; color:var(--sub); letter-spacing:0.3px; margin-bottom:8px; }
+.empty-state { text-align:center; padding:60px 20px; color:var(--sub); font-size:14px; letter-spacing:0.3px; animation:fadeIn 0.5s ease; }
+.level-list { display:flex; flex-direction:column; gap:2px; }
+.level-card { background:var(--card); border:1px solid transparent; border-bottom:1px solid var(--border); padding:14px 18px; display:flex; align-items:center; gap:14px; transition:all 0.15s; border-radius:0; }
+.level-card:first-child { border-radius:8px 8px 0 0; }
+.level-card:last-child { border-radius:0 0 8px 8px; }
+.level-card:only-child { border-radius:8px; }
+.level-card:hover { background:#1a1a1a; border-color:var(--border); transform:translateX(2px); }
+.level-card.top-1 { border-left:3px solid var(--gold); }
+.level-card.top-2 { border-left:3px solid var(--silver); }
+.level-card.top-3 { border-left:3px solid var(--bronze); }
+.level-rank { font-size:12px; color:var(--sub); font-weight:600; min-width:36px; letter-spacing:0.5px; }
+.level-card.top-1 .level-rank { color:var(--gold); }
+.level-card.top-2 .level-rank { color:var(--silver); }
+.level-card.top-3 .level-rank { color:var(--bronze); }
+.level-info { flex:1; min-width:0; }
+.level-name-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.level-name { font-weight:500; font-size:14px; letter-spacing:0.2px; }
+.level-name-link { color:var(--text); text-decoration:none; font-weight:500; font-size:14px; letter-spacing:0.2px; transition:color 0.2s; }
+.level-name-link:hover { color:var(--accent); }
+.level-id { font-size:10px; color:var(--sub); cursor:pointer; margin-top:2px; transition:color 0.2s; }
+.level-id:hover { color:var(--accent); }
+.legacy-badge { font-size:10px; padding:2px 7px; border-radius:3px; font-weight:600; letter-spacing:0.5px; white-space:nowrap; }
+.legacy-badge.legacy-1 { background:var(--gold-bg); color:var(--gold); }
+.legacy-badge.legacy-2 { background:var(--silver-bg); color:var(--silver); }
+.legacy-badge.legacy-3 { background:var(--bronze-bg); color:var(--bronze); }
+.history-badge { font-size:10px; padding:2px 7px; border-radius:3px; font-weight:600; letter-spacing:0.3px; white-space:nowrap; animation:fadeIn 0.3s ease; }
+.history-badge.up { background:rgba(92,184,122,0.15); color:var(--up); }
+.history-badge.down { background:rgba(224,85,85,0.15); color:var(--down); }
+.history-badge.new { background:rgba(77,168,218,0.15); color:var(--new); }
+.level-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
+.level-tag { background:var(--tag-bg); color:var(--tag-text); font-size:10px; padding:2px 8px; border-radius:3px; letter-spacing:0.3px; transition:all 0.2s; }
+.level-tag:hover { background:#2a3050; }
+.level-details { font-size:11px; color:var(--sub); margin-top:3px; letter-spacing:0.2px; }
+.level-details strong { color:var(--text); font-weight:500; }
+.level-difficulty-bar { height:2px; background:var(--border); border-radius:1px; margin-top:6px; overflow:hidden; }
+.level-difficulty-fill { height:100%; border-radius:1px; background:var(--accent); transition:width 0.5s ease; }
+.level-actions { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.edit-btn { width:30px; height:30px; border-radius:5px; background:var(--surface); border:1px solid var(--border); cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; color:var(--edit); }
+.edit-btn:hover { background:rgba(59,125,216,0.15); border-color:var(--edit); transform:scale(1.1); }
+.edit-btn svg { width:13px; height:13px; }
+.complete-btn { width:30px; height:30px; border-radius:5px; background:var(--surface); border:1px solid var(--border); cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--green); }
+.complete-btn:hover:not(.completed):not(.pending) { background:var(--green-bg); border-color:var(--green); transform:scale(1.1); }
+.complete-btn.completed { background:var(--green-bg); border-color:rgba(92,184,122,0.3); cursor:default; opacity:0.7; }
+.complete-btn.pending { background:rgba(201,169,78,0.15); border-color:var(--gold); color:var(--gold); cursor:default; opacity:0.7; }
+.delete-btn { background:transparent; border:1px solid transparent; color:var(--sub); cursor:pointer; font-size:16px; padding:2px 6px; border-radius:3px; transition:all 0.2s; line-height:1; }
+.delete-btn:hover { color:var(--red); border-color:rgba(224,85,85,0.3); transform:scale(1.15); }
+.player-list { display:flex; flex-direction:column; gap:2px; }
+.player-card { background:var(--card); border:1px solid transparent; border-bottom:1px solid var(--border); padding:12px 18px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:all 0.15s; animation:fadeIn 0.3s ease; }
+.player-card:hover { background:#1a1a1a; transform:translateX(2px); }
+.player-rank { font-size:12px; color:var(--sub); font-weight:600; min-width:30px; }
+.player-card:nth-child(1) .player-rank { color:var(--gold); }
+.player-card:nth-child(2) .player-rank { color:var(--silver); }
+.player-card:nth-child(3) .player-rank { color:var(--bronze); }
+.player-avatar-small { width:28px; height:28px; border-radius:50%; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:600; color:var(--accent); flex-shrink:0; transition:all 0.2s; }
+.player-card:hover .player-avatar-small { border-color:var(--accent); }
+.player-name { font-weight:500; font-size:14px; }
+.player-points { margin-left:auto; font-size:13px; color:var(--accent); font-weight:500; }
+.bottom-bar { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:750px; padding:16px 28px; background:linear-gradient(transparent,rgba(10,10,10,0.95) 30%,rgba(10,10,10,1) 100%); display:flex; gap:10px; z-index:40; }
+.add-btn { width:40px; height:40px; border-radius:6px; background:var(--accent); border:none; color:#fff; font-size:20px; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.add-btn:hover { background:var(--accent-hover); box-shadow:0 0 20px rgba(77,168,218,0.3); transform:scale(1.08); }
+.add-btn:active { transform:scale(0.95); }
+.copy-btn { width:40px; height:40px; border-radius:6px; background:var(--copy); border:none; color:#fff; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; flex-shrink:0; position:relative; }
+.copy-btn:hover { background:var(--copy-hover); box-shadow:0 0 20px rgba(59,125,216,0.3); transform:scale(1.08); }
+.copy-btn:active { transform:scale(0.95); }
+.copy-btn svg { width:16px; height:16px; }
+.copy-tooltip { position:absolute; bottom:50px; left:50%; transform:translateX(-50%); background:var(--surface); border:1px solid var(--border); color:var(--text); padding:6px 12px; border-radius:4px; font-size:11px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.copy-tooltip.show { opacity:1; }
+.modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.modal-overlay.active { opacity:1; pointer-events:all; }
+.modal { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:26px 28px; width:420px; }
+.modal h2 { font-size:16px; margin-bottom:18px; font-weight:500; color:#fff; }
+.modal label { display:block; font-size:11px; color:var(--sub); margin-bottom:4px; margin-top:14px; text-transform:uppercase; letter-spacing:0.8px; font-weight:500; }
+.modal input[type="text"], .modal input[type="number"], .modal input[type="url"] { width:100%; padding:9px 12px; background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:13px; font-family:inherit; outline:none; transition:all 0.2s; }
+.modal input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(77,168,218,0.1); }
+.modal input[type="range"] { width:100%; margin-top:4px; accent-color:var(--accent); height:4px; }
+.range-row { display:flex; align-items:center; gap:10px; }
+.range-row input[type="range"] { flex:1; }
+.range-value { font-weight:500; color:var(--accent); font-size:13px; min-width:30px; text-align:right; }
+.modal-hint { font-size:10px; color:var(--sub); margin-top:3px; }
+.modal-buttons { display:flex; gap:8px; margin-top:22px; justify-content:flex-end; }
+.modal-buttons button { padding:9px 20px; border-radius:6px; border:none; cursor:pointer; font-size:13px; font-weight:500; font-family:inherit; transition:all 0.2s; }
+.btn-cancel { background:var(--card); color:var(--text); border:1px solid var(--border); }
+.btn-cancel:hover { background:#1a1a1a; }
+.btn-ok { background:var(--accent); color:#fff; }
+.btn-ok:hover { background:var(--accent-hover); transform:translateY(-1px); box-shadow:0 4px 12px rgba(77,168,218,0.3); }
+.btn-danger { background:var(--red); color:#fff; }
+.btn-danger:hover { background:#c0392b; }
+.tag-input-wrapper { position:relative; }
+.tag-suggestions { position:absolute; top:100%; left:0; right:0; background:var(--surface); border:1px solid var(--border); border-radius:0 0 6px 6px; max-height:140px; overflow-y:auto; z-index:101; display:none; }
+.tag-suggestions.show { display:block; animation:slideDown 0.15s ease; }
+.tag-suggestion-item { padding:8px 12px; font-size:12px; cursor:pointer; color:var(--text); transition:background 0.1s; }
+.tag-suggestion-item:hover { background:var(--card); color:var(--accent); }
+.profile-page { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:200; overflow-y:auto; }
+.profile-page.active { display:block; animation:fadeIn 0.3s ease; }
+.profile-container { max-width:550px; margin:0 auto; padding:24px; }
+.profile-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:28px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+.back-btn { background:var(--surface); border:1px solid var(--border); color:var(--text); padding:8px 14px; border-radius:6px; cursor:pointer; font-size:13px; font-family:inherit; transition:all 0.2s; }
+.back-btn:hover { border-color:var(--accent); }
+.profile-avatar { width:64px; height:64px; border-radius:8px; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:600; color:var(--accent); margin:0 auto 16px; transition:all 0.2s; }
+.profile-avatar:hover { border-color:var(--accent); box-shadow:0 0 20px rgba(77,168,218,0.2); }
+.profile-name-input { display:block; width:100%; max-width:280px; margin:0 auto 4px; text-align:center; background:transparent; border:none; border-bottom:1px solid var(--border); color:#fff; font-size:20px; font-weight:500; padding:6px 0; font-family:inherit; outline:none; transition:border 0.2s; }
+.profile-name-input:focus { border-bottom-color:var(--accent); }
+.profile-subtitle { text-align:center; color:var(--sub); font-size:12px; margin-bottom:24px; }
+.profile-stat { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:14px 18px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; transition:all 0.2s; }
+.profile-stat:hover { border-color:var(--accent); }
+.profile-stat-label { color:var(--sub); font-size:12px; }
+.profile-stat-value { font-weight:500; font-size:14px; color:#fff; }
+.profile-stat-value.accent { color:var(--accent); }
+.profile-section { margin-top:22px; }
+.profile-section h3 { font-size:11px; color:var(--sub); margin-bottom:6px; text-transform:uppercase; letter-spacing:1px; font-weight:500; }
+.profile-completed-item { background:var(--card); border:1px solid var(--border); border-radius:4px; padding:10px 14px; margin-bottom:2px; font-size:13px; display:flex; align-items:center; gap:8px; transition:all 0.15s; }
+.profile-completed-item:hover { background:#1a1a1a; }
+.profile-completed-dot { width:6px; height:6px; border-radius:50%; background:var(--green); flex-shrink:0; }
+.profile-actions { display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+.profile-action-btn { padding:9px 16px; border-radius:6px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; font-size:12px; font-family:inherit; transition:all 0.2s; }
+.profile-action-btn:hover { border-color:var(--accent); color:var(--accent); transform:translateY(-1px); }
+.profile-action-btn.export-btn:hover { border-color:var(--green); color:var(--green); }
+.profile-action-btn.import-btn:hover { border-color:var(--copy); color:var(--copy); }
+.profile-action-btn.copy-profile-btn { background:var(--accent); color:#fff; border:none; }
+.profile-action-btn.copy-profile-btn:hover { background:var(--accent-hover); box-shadow:0 4px 12px rgba(77,168,218,0.3); }
+.radar-container { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:20px; margin-bottom:8px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; justify-content:center; }
+.radar-legend { display:flex; flex-direction:column; gap:6px; font-size:11px; color:var(--sub); }
+.radar-legend-item { display:flex; align-items:center; gap:6px; }
+.radar-legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.radar-legend-dot.overall { background:var(--accent); box-shadow:0 0 6px rgba(77,168,218,0.5); }
+.ach-grid { display:grid; grid-template-columns:1fr 1fr; gap:3px; }
+.ach-card { background:var(--card); border:1px solid var(--border); border-radius:4px; padding:8px 10px; display:flex; align-items:center; gap:8px; font-size:10px; letter-spacing:0.3px; transition:all 0.15s; }
+.ach-card:hover { background:#1a1a1a; }
+.ach-card.earned { opacity:1; }
+.ach-card.locked { opacity:0.4; }
+.ach-icon { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; flex-shrink:0; }
+.ach-card.earned .ach-icon { background:var(--green-bg); color:var(--green); }
+.ach-card.locked .ach-icon { background:var(--border); color:var(--sub); }
+.ach-info { flex:1; min-width:0; }
+.ach-name { font-weight:500; color:var(--text); }
+.ach-card.locked .ach-name { color:var(--sub); }
+.ach-desc { color:var(--sub); font-size:9px; margin-top:1px; }
+.ach-count { font-size:12px; color:var(--accent); font-weight:600; }
+.mod-card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:6px; transition:all 0.15s; animation:fadeIn 0.3s ease; }
+.mod-card:hover { background:#1a1a1a; }
+.mod-card .mod-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.mod-card .mod-user { color:var(--accent); font-weight:500; font-size:14px; }
+.mod-card .mod-level { color:var(--text); font-size:13px; }
+.mod-card .mod-link { color:var(--copy); font-size:12px; word-break:break-all; display:block; margin:4px 0; transition:color 0.2s; }
+.mod-card .mod-link:hover { color:var(--accent); }
+.mod-card .mod-status { font-size:11px; padding:3px 8px; border-radius:3px; font-weight:500; }
+.mod-status.pending { background:rgba(201,169,78,0.15); color:var(--gold); }
+.mod-status.approved { background:rgba(92,184,122,0.15); color:var(--green); }
+.mod-status.rejected { background:rgba(224,85,85,0.15); color:var(--red); }
+.mod-card .mod-actions { display:flex; gap:8px; margin-top:10px; }
+.mod-card .mod-actions button { padding:6px 14px; border-radius:4px; border:none; cursor:pointer; font-size:11px; font-weight:500; font-family:inherit; transition:all 0.2s; }
+.btn-approve { background:var(--green); color:#fff; }
+.btn-approve:hover { background:#4a9e68; transform:translateY(-1px); }
+.btn-reject { background:var(--red); color:#fff; }
+.btn-reject:hover { background:#c0392b; transform:translateY(-1px); }
+    </style>
+</head>
+<body>
+
+<div class="app" id="app">
+    <div class="header">
+        <div class="header-left"><div class="header-logo"></div><div class="header-title">Pointer <span>made</span></div></div>
+        <div class="header-right" id="headerRight">
+            <div class="points-badge" id="pointsBadge" style="display:none;"><strong id="pointsDisplay">0.00</strong> points</div>
+            <button class="avatar" id="avatarBtn" style="display:none;">U</button>
+            <span class="guest-badge" id="guestBadge">Guest</span>
+            <button class="sign-in-btn" id="signInBtn">Sign In</button>
+            <button class="logout-btn" id="logoutBtn" style="display:none;">Exit</button>
+        </div>
+    </div>
+    <div class="tabs" id="tabs">
+        <button class="tab-btn active" data-tab="list">List</button>
+        <button class="tab-btn" data-tab="legacy">Legacy List</button>
+        <button class="tab-btn" data-tab="players">Players</button>
+        <button class="tab-btn" data-tab="moderation" id="modTab" style="display:none;">Moderation</button>
+    </div>
+    <div class="search-wrapper" id="searchWrapper">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search by name, tag or ID...">
+    </div>
+    <div class="content" id="content">
+        <div class="list-header"><span class="list-header-label" id="listHeaderLabel">Levels</span><span class="list-header-label" style="font-size:10px;" id="listCount">0</span></div>
+        <div class="legacy-date" id="legacyDate" style="display:none;"></div>
+        <div class="empty-state" id="emptyState">List is empty</div>
+        <div class="level-list" id="levelList"></div>
+        <div class="player-list" id="playerList" style="display:none;"></div>
+        <div id="modList" style="display:none;"></div>
+    </div>
+</div>
+
+<div class="bottom-bar" id="bottomBar" style="display:none;">
+    <button class="add-btn" id="addBtn">+</button>
+    <button class="copy-btn" id="copyBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span class="copy-tooltip" id="copyTooltip">Copied</span>
+    </button>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+        <h2 id="modalTitle">New Level</h2>
+        <label>Name</label><input type="text" id="levelNameInput" placeholder="Enter name">
+        <label>Difficulty (<span id="rangeDisplay">50</span>)</label>
+        <div class="range-row"><input type="range" id="levelDifficultyInput" min="0" max="100" value="50"><span class="range-value" id="rangeValue">50</span></div>
+        <label>Points</label><input type="number" id="levelNumberInput" placeholder="0" min="0" step="0.01">
+        <label>Level ID</label><input type="text" id="levelIdInput" placeholder="e.g. 12345678">
+        <label>Showcase Link</label><input type="url" id="levelShowcaseInput" placeholder="https://youtu.be/...">
+        <label>Tags</label>
+        <div class="tag-input-wrapper"><input type="text" id="levelTagsInput" placeholder="e.g. demon, hard" autocomplete="off"><div class="tag-suggestions" id="tagSuggestions"></div></div>
+        <p class="modal-hint">Separate tags with commas</p>
+        <div class="modal-buttons"><button class="btn-cancel" id="modalCancel">Cancel</button><button class="btn-ok" id="modalOk">OK</button></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="ticketOverlay">
+    <div class="modal">
+        <h2>Submit Completion</h2>
+        <p style="font-size:12px;color:var(--sub);margin-bottom:14px;">Completing: <strong id="ticketLevelName"></strong></p>
+        <label>Video Link</label><input type="url" id="ticketVideoLink" placeholder="https://youtu.be/... or https://medal.tv/...">
+        <p class="modal-hint">Handcam or Geode mods proof required</p>
+        <div class="modal-buttons"><button class="btn-cancel" id="ticketCancel">Cancel</button><button class="btn-ok" id="ticketSubmit">Submit</button></div>
+    </div>
+</div>
+
+<div class="auth-overlay" id="authOverlay" style="display:none;">
+    <div class="auth-modal">
+        <h2>Pointer made</h2>
+        <input type="email" id="authEmail" placeholder="Email"><input type="password" id="authPassword" placeholder="Password">
+        <button id="authSubmitBtn">Sign In</button>
+        <div class="auth-switch"><span id="authSwitchBtn">Create account</span></div>
+        <div class="auth-error" id="authError"></div>
+    </div>
+</div>
+
+<div class="profile-page" id="profilePage">
+    <div class="profile-container">
+        <div class="profile-header"><button class="back-btn" id="backBtn">← Back</button><div class="points-badge"><strong id="profilePoints">0.00</strong> points</div></div>
+        <div class="profile-avatar" id="profileAvatar">U</div>
+        <input type="text" class="profile-name-input" id="profileNameInput" value="Uruman" maxlength="20" disabled>
+        <p class="profile-subtitle" id="profileSubtitle">Pointer made member</p>
+        <div class="profile-stat"><span class="profile-stat-label">Points</span><span class="profile-stat-value accent" id="profileTotalPoints">0.00</span></div>
+        <div class="profile-stat"><span class="profile-stat-label">Completed</span><span class="profile-stat-value" id="profileCompletedCount">0</span></div>
+        <div class="profile-stat" id="profileAchStat" style="display:none;"><span class="profile-stat-label">Achievements</span><span class="profile-stat-value ach-count" id="profileAchCount">0/95</span></div>
+        <div class="profile-section" id="profileSkillSection"><h3>Skill Set</h3>
+            <div class="radar-container" id="radarContainer"><canvas id="radarCanvas" width="280" height="280"></canvas><div class="radar-legend" id="radarLegend"></div></div>
+            <div id="radarEmpty" style="display:none;text-align:center;padding:20px;color:var(--sub);font-size:12px;">No completed levels yet</div>
+        </div>
+        <div class="profile-section" id="profileAchSection" style="display:none;"><h3>Achievements</h3><div class="ach-grid" id="achGrid"></div></div>
+        <div class="profile-section"><h3>Completed Levels</h3><div id="profileCompletedList"></div></div>
+        <div class="profile-actions" id="profileActions">
+            <button class="profile-action-btn export-btn" id="exportBtn">Export Data</button>
+            <button class="profile-action-btn import-btn" id="importBtn">Import Data</button>
+            <button class="profile-action-btn copy-profile-btn" id="copyProfileBtn">Copy Profile</button>
+            <input type="file" id="importFileInput" accept=".json" style="display:none;">
+        </div>
+    </div>
+</div>
+
+</body>
+<script>
+const SUPABASE_URL = 'https://msnijweenzlyqvcjhefx.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_Rdz9P50sdBvpscdi79cYZg_xHndxy1B';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null, isAdmin = false, currentTab = 'list', ticketLevelId = null;
+let levels = [], totalPoints = 0, completedIds = [], profileName = 'Uruman';
+let legacyLevels = [], legacyDate = '', historyLog = [], prevSortedIds = [];
+let allTags = [], levelTags = {}, earnedAchievements = [], achStats = {};
+let viewingOwnProfile = true, viewingPlayerId = null;
+
+const $ = id => document.getElementById(id);
+function formatPoints(n) { return parseFloat(n||0).toFixed(2); }
+function escapeHTML(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
+function sortLevels(a, b) { if (+b.difficulty !== +a.difficulty) return +b.difficulty - +a.difficulty; return (+b.number||+b.points||0) - (+a.number||+a.points||0); }
+function getSorted(source) { return (source||[]).slice().sort(sortLevels); }
+function getTags(id) { return levelTags[id] || []; }
+function setTags(id, tags) { const c = tags.map(t => t.trim().toLowerCase()).filter(t => t); levelTags[id] = c; c.forEach(t => { if (!allTags.includes(t)) allTags.push(t); }); }
+function removeTags(id) { delete levelTags[id]; }
+
+function showAchievementToast(name) {
+    const toast = document.createElement('div');
+    toast.className = 'ach-toast';
+    toast.innerHTML = `<span>🏆</span> ${name}`;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => { toast.classList.add('show'); });
+    setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 2000);
+}
+
+async function loadLevelsFromDB() {
+    try {
+        const { data } = await sb.from('levels').select('*');
+        levels = (data||[]).map(l => {
+            if (l.tags && !levelTags[l.id]) {
+                levelTags[l.id] = l.tags.split(',').map(t => t.trim()).filter(t => t);
+            }
+            return {...l, name:l.title, number:l.points};
+        });
+    } catch(e) { console.error(e); levels = []; }
+}
+
+async function loadUserData(userId) {
+    try {
+        const { data: profile, error } = await sb.from('profiles').select('*').eq('id', userId).maybeSingle();
+        if (error) { console.error('Profile error:', error); await loadLevelsFromDB(); renderCurrentTab(); return; }
+        if (!profile) {
+            const newProfile = { id: userId, username: 'Player', total_score: 0, levels_completed: 0 };
+            await sb.from('profiles').insert(newProfile);
+            profileName = 'Player'; totalPoints = 0; completedIds = []; isAdmin = false;
+            legacyLevels = []; legacyDate = ''; historyLog = []; prevSortedIds = [];
+            allTags = []; levelTags = {}; earnedAchievements = []; achStats = {};
+            await loadLevelsFromDB(); updateUI(); renderCurrentTab(); return;
+        }
+        profileName = profile.username || 'Player';
+        totalPoints = profile.total_score || 0;
+        const { data: ul } = await sb.from('user_levels').select('level_id').eq('user_id', userId);
+        completedIds = ul ? ul.map(r => r.level_id) : [];
+        const ud = profile.user_data || {};
+        legacyLevels = ud.legacyLevels || []; legacyDate = ud.legacyDate || '';
+        historyLog = ud.historyLog || []; prevSortedIds = ud.prevSortedIds || [];
+        allTags = ud.allTags || []; levelTags = ud.levelTags || {};
+        earnedAchievements = ud.earnedAchievements || []; achStats = ud.achStats || {};
+        isAdmin = (profileName === 'admin');
+        await loadLevelsFromDB();
+    } catch(e) { console.error(e); }
+}
+
+async function loadPlayerData(playerId) {
+    viewingPlayerId = playerId; viewingOwnProfile = false;
+    try {
+        const { data: profile } = await sb.from('profiles').select('*').eq('id', playerId).maybeSingle();
+        if (!profile) { alert('Player not found'); return; }
+        profileName = profile.username || 'Player'; totalPoints = profile.total_score || 0;
+        const { data: ul } = await sb.from('user_levels').select('level_id').eq('user_id', playerId);
+        completedIds = ul ? ul.map(r => r.level_id) : [];
+        const ud = profile.user_data || {};
+        allTags = ud.allTags || []; levelTags = ud.levelTags || {};
+        earnedAchievements = ud.earnedAchievements || []; achStats = ud.achStats || {};
+        await loadLevelsFromDB(); showProfilePage();
+    } catch(e) { console.error(e); }
+}
+
+function showProfilePage() {
+    try {
+        $('profilePage').classList.add('active'); $('app').style.display = 'none';
+        document.querySelector('.tabs').style.display = 'none'; $('searchWrapper').style.display = 'none'; $('bottomBar').style.display = 'none';
+        if (viewingOwnProfile) {
+            $('profileNameInput').disabled = false; $('profileActions').style.display = 'flex';
+            $('profileAchStat').style.display = 'block'; $('profileAchSection').style.display = 'block'; $('profileSkillSection').style.display = 'block';
+        } else {
+            $('profileNameInput').disabled = true; $('profileActions').style.display = 'none';
+            $('profileAchStat').style.display = 'block'; $('profileAchSection').style.display = 'block'; $('profileSkillSection').style.display = 'block';
+        }
+        renderProfileCompleted(); drawRadar(); renderAchievements(); updateUI();
+    } catch(e) { console.error(e); }
+}
+function showOwnProfile() { viewingOwnProfile = true; viewingPlayerId = null; showProfilePage(); }
+
+function updateUI() {
+    try {
+        const pts = formatPoints(totalPoints);
+        if ($('pointsDisplay')) $('pointsDisplay').textContent = pts;
+        if ($('profilePoints')) $('profilePoints').textContent = pts;
+        if ($('profileTotalPoints')) $('profileTotalPoints').textContent = pts;
+        if ($('profileCompletedCount')) $('profileCompletedCount').textContent = completedIds.length;
+        const init = (profileName||'U').charAt(0).toUpperCase();
+        if ($('avatarBtn')) $('avatarBtn').textContent = init;
+        if ($('profileAvatar')) $('profileAvatar').textContent = init;
+        if ($('profileNameInput')) $('profileNameInput').value = profileName;
+        if ($('profileAchCount')) $('profileAchCount').textContent = (earnedAchievements.length||0)+'/95';
+        if ($('listCount')) $('listCount').textContent = (currentTab==='legacy'?legacyLevels.length:levels.length);
+    } catch(e) {}
+}
+
+function renderCurrentTab() {
+    try {
+        if ($('levelList')) $('levelList').style.display = 'none';
+        if ($('playerList')) $('playerList').style.display = 'none';
+        if ($('modList')) $('modList').style.display = 'none';
+        if ($('searchWrapper')) $('searchWrapper').style.display = 'block';
+        if ($('legacyDate')) $('legacyDate').style.display = 'none';
+        if ($('bottomBar')) $('bottomBar').style.display = 'none';
+        if ($('emptyState')) $('emptyState').style.display = 'none';
+        if ($('listHeaderLabel')) $('listHeaderLabel').textContent = 'Levels';
+        if (currentTab === 'list') {
+            if ($('levelList')) $('levelList').style.display = 'flex';
+            if (currentUser && isAdmin && $('bottomBar')) $('bottomBar').style.display = 'flex';
+            renderLevels(levels, false);
+        } else if (currentTab === 'legacy') {
+            if ($('levelList')) $('levelList').style.display = 'flex';
+            if ($('listHeaderLabel')) $('listHeaderLabel').textContent = 'Legacy List';
+            if (legacyDate) { if ($('legacyDate')) { $('legacyDate').style.display = 'block'; $('legacyDate').textContent = 'Snapshot: '+new Date(legacyDate).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}); } }
+            else { if ($('legacyDate')) { $('legacyDate').style.display = 'block'; $('legacyDate').textContent = 'No legacy data yet'; } }
+            renderLevels(legacyLevels, true);
+        } else if (currentTab === 'players') {
+            if ($('playerList')) $('playerList').style.display = 'flex';
+            if ($('searchWrapper')) $('searchWrapper').style.display = 'none';
+            if ($('listHeaderLabel')) $('listHeaderLabel').textContent = 'Players';
+            renderPlayers();
+        } else if (currentTab === 'moderation') {
+            if ($('modList')) $('modList').style.display = 'block';
+            if ($('searchWrapper')) $('searchWrapper').style.display = 'none';
+            if ($('listHeaderLabel')) $('listHeaderLabel').textContent = 'Moderation';
+            renderModeration();
+        }
+        updateUI();
+    } catch(e) { console.error(e); }
+}
+
+function renderLevels(source, isLegacy) {
+    const list = $('levelList'); if (!list) return;
+    const q = ($('searchInput')?.value||'').toLowerCase();
+    list.innerHTML = '';
+    if (!source || !source.length) { if ($('emptyState')) { $('emptyState').style.display='block'; } list.style.display='none'; if ($('listCount')) $('listCount').textContent='0'; return; }
+    let filtered = source.filter(l => (l.title||l.name||'').toLowerCase().includes(q) || getTags(l.id).some(t => t.includes(q)) || (l.custom_id||'').toLowerCase().includes(q));
+    const sorted = getSorted(filtered);
+    if (!sorted.length) { if ($('emptyState')) { $('emptyState').style.display='block'; } list.style.display='none'; if ($('listCount')) $('listCount').textContent='0'; return; }
+    if ($('emptyState')) $('emptyState').style.display='none'; list.style.display='flex'; if ($('listCount')) $('listCount').textContent = sorted.length;
+
+    sorted.forEach((l, i) => {
+        const rank = i+1, isDone = completedIds.includes(l.id);
+        const card = document.createElement('div'); card.className = 'level-card';
+        if (rank===1) card.classList.add('top-1'); if (rank===2) card.classList.add('top-2'); if (rank===3) card.classList.add('top-3');
+
+        let legHTML = '', histHTML = '';
+        if (!isLegacy && legacyLevels.length) { const ls = getSorted(legacyLevels), li = ls.findIndex(x => x.id===l.id); if (li===0) legHTML='<span class="legacy-badge legacy-1">Legacy #1</span>'; else if (li===1) legHTML='<span class="legacy-badge legacy-2">Legacy #2</span>'; else if (li===2) legHTML='<span class="legacy-badge legacy-3">Legacy #3</span>'; }
+        if (!isLegacy) { const h = (historyLog||[]).find(x => x.levelId===l.id); if (h) { if (h.type==='up') histHTML=`<span class="history-badge up">↑${h.positions}</span>`; else if (h.type==='down') histHTML=`<span class="history-badge down">↓${h.positions}</span>`; else if (h.type==='new') histHTML='<span class="history-badge new">New</span>'; } }
+
+        const tags = getTags(l.id), tagsHTML = tags.length ? '<div class="level-tags">'+tags.map(t=>`<span class="level-tag">${escapeHTML(t)}</span>`).join('')+'</div>' : '';
+
+        const customId = l.custom_id || '';
+        const idHTML = customId ? `<div class="level-id" onclick="copyToClipboard('${escapeHTML(customId).replace(/'/g, "\\'")}')" title="Click to copy ID">ID: ${escapeHTML(customId)}</div>` : '';
+
+        const showcaseLink = l.showcase || '';
+        const nameHTML = showcaseLink
+            ? `<a href="${escapeHTML(showcaseLink)}" target="_blank" class="level-name-link" title="Open showcase">${escapeHTML(l.title||l.name)}</a>`
+            : `<span class="level-name">${escapeHTML(l.title||l.name)}</span>`;
+
+        let actionsHTML = '';
+        if (!isLegacy && currentUser) { actionsHTML = '<div class="level-actions">'; if (isAdmin) actionsHTML += `<button class="edit-btn" data-id="${l.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>`; actionsHTML += `<button class="complete-btn ${isDone?'completed':''}" data-id="${l.id}">✓</button>`; if (isAdmin) actionsHTML += `<button class="delete-btn" data-id="${l.id}">×</button>`; actionsHTML += '</div>'; }
+
+        card.innerHTML = `<span class="level-rank">#${rank}</span><div class="level-info"><div class="level-name-row">${nameHTML}${legHTML}${histHTML}</div>${idHTML}${tagsHTML}<div class="level-details">points: <strong>${formatPoints(l.points||l.number)}</strong> &middot; difficulty: <strong>${l.difficulty}</strong></div><div class="level-difficulty-bar"><div class="level-difficulty-fill" style="width:${l.difficulty}%"></div></div></div>${actionsHTML}`;
+        list.appendChild(card);
+
+        if (!isLegacy && currentUser) {
+            const editBtn = card.querySelector('.edit-btn'); if (editBtn) editBtn.addEventListener('click', e => { e.stopPropagation(); openEditModal(l); });
+            const completeBtn = card.querySelector('.complete-btn'); if (completeBtn) completeBtn.addEventListener('click', e => { e.stopPropagation(); if (!isDone) openTicketModal(l); });
+            const deleteBtn = card.querySelector('.delete-btn'); if (deleteBtn) deleteBtn.addEventListener('click', async e => { e.stopPropagation(); if (!confirm(`Delete "${l.title||l.name}"?`)) return; try { await sb.from('levels').delete().eq('id', l.id); } catch(er){} levels = levels.filter(x => x.id !== l.id); removeTags(l.id); renderCurrentTab(); });
+        }
+    });
+}
+
+function copyToClipboard(text) { navigator.clipboard.writeText(text).then(()=>{}).catch(()=>{}); }
+
+function openTicketModal(level) { ticketLevelId = level.id; if ($('ticketLevelName')) $('ticketLevelName').textContent = level.title || level.name; if ($('ticketVideoLink')) $('ticketVideoLink').value = ''; if ($('ticketOverlay')) $('ticketOverlay').classList.add('active'); }
+
+function openEditModal(l) {
+    if ($('modalTitle')) $('modalTitle').textContent = 'Edit Level';
+    if ($('levelNameInput')) $('levelNameInput').value = l.title||l.name;
+    if ($('levelDifficultyInput')) $('levelDifficultyInput').value = l.difficulty;
+    if ($('levelNumberInput')) $('levelNumberInput').value = l.points||l.number;
+    if ($('levelTagsInput')) $('levelTagsInput').value = getTags(l.id).join(', ');
+    if ($('levelIdInput')) $('levelIdInput').value = l.custom_id || '';
+    if ($('levelShowcaseInput')) $('levelShowcaseInput').value = l.showcase || '';
+    if ($('rangeDisplay')) $('rangeDisplay').textContent = l.difficulty;
+    if ($('rangeValue')) $('rangeValue').textContent = l.difficulty;
+    if ($('modalOk')) $('modalOk').textContent = 'Save';
+    if ($('modalOverlay')) { $('modalOverlay').dataset.editId = l.id; $('modalOverlay').classList.add('active'); }
+}
+
+async function renderPlayers() {
+    const list = $('playerList'); if (!list) return; list.innerHTML = '';
+    try {
+        const { data: players } = await sb.from('profiles').select('*').order('total_score', { ascending: false });
+        if (!players || !players.length) { list.innerHTML = '<div class="empty-state">No players yet</div>'; return; }
+        players.forEach((p, i) => {
+            const card = document.createElement('div'); card.className = 'player-card';
+            card.innerHTML = `<span class="player-rank">#${i+1}</span><div class="player-avatar-small">${(p.username||'P').charAt(0).toUpperCase()}</div><span class="player-name">${escapeHTML(p.username||'Player')}</span><span class="player-points">${formatPoints(p.total_score||0)} pts</span>`;
+            card.addEventListener('click', () => { if (currentUser && p.id === currentUser.id) showOwnProfile(); else loadPlayerData(p.id); });
+            list.appendChild(card);
+        });
+    } catch(e) { console.error(e); list.innerHTML = '<div class="empty-state">Error loading players</div>'; }
+}
+
+async function renderModeration() {
+    const list = $('modList'); if (!list) return; list.innerHTML = '';
+    try {
+        const { data: tickets } = await sb.from('moderation_requests').select('*').order('created_at', { ascending: false });
+        if (!tickets || !tickets.length) { list.innerHTML = '<div class="empty-state">No tickets</div>'; return; }
+        for (const t of tickets) {
+            const { data: userData } = await sb.from('profiles').select('username').eq('id', t.user_id).maybeSingle();
+            const { data: levelData } = await sb.from('levels').select('title,points').eq('id', t.level_id).maybeSingle();
+            const card = document.createElement('div'); card.className = 'mod-card';
+            card.innerHTML = `<div class="mod-header"><span class="mod-user">${escapeHTML(userData?.username||'Unknown')}</span><span class="mod-status ${t.status}">${t.status}</span></div><div class="mod-level">${escapeHTML(levelData?.title||'Unknown')} — ${levelData?.points||0} pts</div><a class="mod-link" href="${t.video_link}" target="_blank">${t.video_link}</a>${t.status==='pending'?`<div class="mod-actions"><button class="btn-approve" data-id="${t.id}" data-user="${t.user_id}" data-level="${t.level_id}" data-points="${levelData?.points||0}">Approve</button><button class="btn-reject" data-id="${t.id}">Reject</button></div>`:''}`;
+            list.appendChild(card);
+            card.querySelector('.btn-approve')?.addEventListener('click', async function() {
+                try { await sb.from('moderation_requests').update({ status:'approved' }).eq('id', this.dataset.id); const { data: prof } = await sb.from('profiles').select('*').eq('id', this.dataset.user).maybeSingle(); if (prof) { await sb.from('profiles').update({ total_score:(prof.total_score||0)+parseFloat(this.dataset.points), levels_completed:(prof.levels_completed||0)+1 }).eq('id', this.dataset.user); await sb.from('user_levels').upsert({ user_id:this.dataset.user, level_id:parseInt(this.dataset.level) }); } } catch(er) { console.error(er); } renderModeration(); });
+            card.querySelector('.btn-reject')?.addEventListener('click', async function() { try { await sb.from('moderation_requests').update({ status:'rejected' }).eq('id', this.dataset.id); } catch(er){} renderModeration(); });
+        }
+    } catch(e) { console.error(e); list.innerHTML = '<div class="empty-state">Error loading tickets</div>'; }
+}
+
+function renderProfileCompleted() {
+    const c = $('profileCompletedList'); if (!c) return; c.innerHTML = '';
+    if (!completedIds.length) { c.innerHTML = '<p style="color:var(--sub);font-size:12px;">Nothing yet</p>'; return; }
+    const sorted = getSorted(levels);
+    completedIds.slice().reverse().forEach(id => { const l = levels.find(x => x.id===id); if (!l) return; const rank = sorted.findIndex(x => x.id===id)+1, tags = getTags(l.id); c.innerHTML += `<div class="profile-completed-item"><span class="profile-completed-dot"></span> #${rank} ${escapeHTML(l.title||l.name)} — diff: ${l.difficulty}, pts: ${formatPoints(l.points||l.number)}${tags.length?' | '+tags.join(', '):''}</div>`; });
+}
+function renderAchievements() {
+    const grid = $('achGrid'); if (!grid) return; grid.innerHTML = '';
+    ACHIEVEMENTS.forEach(ach => { const earned = earnedAchievements.includes(ach.id); grid.innerHTML += `<div class="ach-card ${earned?'earned':'locked'}"><div class="ach-icon">${earned?'✓':'?'}</div><div class="ach-info"><div class="ach-name">${ach.name}</div><div class="ach-desc">${ach.desc}</div></div></div>`; });
+}
+function drawRadar() {
+    const canvas = $('radarCanvas'); if (!canvas) return; const ctx = canvas.getContext('2d'); const done = levels.filter(l => completedIds.includes(l.id));
+    if (!done.length) { if ($('radarContainer')) $('radarContainer').style.display='none'; if ($('radarEmpty')) $('radarEmpty').style.display='block'; return; }
+    const stats = {}; done.forEach(l => getTags(l.id).forEach(t => { if(!stats[t])stats[t]={total:0,count:0};stats[t].total+= +l.difficulty;stats[t].count++; }));
+    const names = Object.keys(stats);
+    if (names.length<2) { if ($('radarContainer')) $('radarContainer').style.display='none'; if ($('radarEmpty')) { $('radarEmpty').style.display='block'; $('radarEmpty').textContent='Need at least 2 tags'; } return; }
+    const display=names.slice(0,20), num=display.length+1, ovTotal=done.reduce((s,l)=>s+ +l.difficulty,0), ovCount=done.length;
+    const allVals=[...display.map(t=>stats[t].total),ovTotal], maxV=Math.max(...allVals,1);
+    if ($('radarContainer')) $('radarContainer').style.display='flex'; if ($('radarEmpty')) $('radarEmpty').style.display='none';
+    const sz=280,cx=sz/2,cy=sz/2,r=100; ctx.clearRect(0,0,sz,sz);
+    for(let ri=1;ri<=4;ri++){ctx.beginPath();for(let i=0;i<num;i++){const a=Math.PI*2/num*i-Math.PI/2,x=cx+r*(ri/4)*Math.cos(a),y=cy+r*(ri/4)*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.strokeStyle='#252525';ctx.lineWidth=0.5;ctx.stroke();}
+    for(let i=0;i<num;i++){const a=Math.PI*2/num*i-Math.PI/2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));ctx.strokeStyle='#333';ctx.lineWidth=1;ctx.stroke();}
+    const cols=['#c9a94e','#b0b0b0','#b8764a','#89b4fa','#a6e3a1','#fab387','#f38ba8','#cba6f7','#94e2d5','#f9e2af','#74c7ec','#f5c2e7','#a6adc8','#eba0ac','#89dceb','#b4befe','#f5e0dc','#a6e3a1','#89b4fa','#c9a94e'];
+    ctx.beginPath();for(let i=0;i<num;i++){const val=i<display.length?stats[display[i]].total:ovTotal,ratio=val/maxV,a=Math.PI*2/num*i-Math.PI/2,x=cx+r*ratio*Math.cos(a),y=cy+r*ratio*Math.sin(a);i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fillStyle='rgba(77,168,218,0.2)';ctx.fill();ctx.strokeStyle='#4da8da';ctx.lineWidth=2;ctx.stroke();
+    for(let i=0;i<num;i++){const val=i<display.length?stats[display[i]].total:ovTotal,ratio=val/maxV,a=Math.PI*2/num*i-Math.PI/2,x=cx+r*ratio*Math.cos(a),y=cy+r*ratio*Math.sin(a);ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle=i<display.length?cols[i%cols.length]:'#4da8da';ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke();}
+    const fs=num>12?8:(num>8?9:10);ctx.font=fs+"px 'Segoe UI',sans-serif";ctx.textAlign='center';ctx.textBaseline='middle';
+    for(let i=0;i<num;i++){const a=Math.PI*2/num*i-Math.PI/2,lr=r+22,x=cx+lr*Math.cos(a),y=cy+lr*Math.sin(a);ctx.fillStyle=i<display.length?cols[i%cols.length]:'#4da8da';ctx.fillText(i<display.length?display[i]:'Overall',x,y);}
+    const legend=$('radarLegend');if(legend){legend.innerHTML='';display.forEach((t,i)=>{legend.innerHTML+=`<div class="radar-legend-item"><span class="radar-legend-dot" style="background:${cols[i%cols.length]}"></span> ${t} — ${stats[t].total} (${stats[t].count})</div>`;});legend.innerHTML+=`<div class="radar-legend-item"><span class="radar-legend-dot overall"></span> Overall — ${ovTotal} (${ovCount})</div>`;}
+}
+
+const ACHIEVEMENTS = [
+    { id:1, name:"First Step", desc:"Add your first level", check:()=>levels.length>=1 }, { id:7, name:"First Blood", desc:"Complete first level", check:()=>completedIds.length>=1 }, { id:8, name:"On The Roll", desc:"Complete 5 levels", check:()=>completedIds.length>=5 }, { id:13, name:"Perfectionist", desc:"Complete 100 difficulty", check:()=>levels.filter(l=>completedIds.includes(l.id)&&+l.difficulty===100).length>0 }, { id:26, name:"Top 10", desc:"Level in top 10", check:()=>levels.length>0 }, { id:30, name:"King of the Hill", desc:"Level at #1", check:()=>levels.length>=1 }, { id:31, name:"Difficulty Spike", desc:"Add 80+ difficulty", check:()=>levels.some(l=>+l.difficulty>=80) }, { id:32, name:"Extreme", desc:"Add 90+ difficulty", check:()=>levels.some(l=>+l.difficulty>=90) }, { id:34, name:"The Pinnacle", desc:"Add 100 difficulty", check:()=>levels.some(l=>+l.difficulty===100) }, { id:46, name:"Pocket Change", desc:"Earn 1.00 points", check:()=>totalPoints>=1 }, { id:51, name:"Billionaire", desc:"Earn 1000.00 points", check:()=>totalPoints>=1000 }, { id:61, name:"Tag Novice", desc:"Use first tag", check:()=>Object.keys(levelTags).length>0 }, { id:71, name:"Legacy Created", desc:"First legacy snapshot", check:()=>legacyLevels.length>0 }, { id:81, name:"Editor", desc:"Edit a level", check:()=>achStats.edited||false }, { id:84, name:"Exporter", desc:"Export data", check:()=>achStats.exported||false }, { id:87, name:"Copycat", desc:"Copy list", check:()=>achStats.copiedList||false }, { id:94, name:"OG", desc:"Since the beginning", check:()=>true }, { id:95, name:"Completionist", desc:"Earn all others", check:()=>earnedAchievements.filter(id=>id!==95).length>=16 }
+];
+function initAchStats() { if(achStats.edited===undefined)achStats.edited=false; if(achStats.exported===undefined)achStats.exported=false; if(achStats.copiedList===undefined)achStats.copiedList=false; }
+function checkAchievements() {
+    initAchStats();
+    ACHIEVEMENTS.forEach(a=>{
+        if(!earnedAchievements.includes(a.id) && a.check()) {
+            earnedAchievements.push(a.id);
+            showAchievementToast(a.name);
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', function() { document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active')); this.classList.add('active'); currentTab = this.dataset.tab; renderCurrentTab(); }));
+    if ($('searchInput')) $('searchInput').addEventListener('input', () => renderCurrentTab());
+    if ($('addBtn')) $('addBtn').addEventListener('click', () => { if (!isAdmin) return; if ($('modalTitle')) $('modalTitle').textContent='New Level'; if ($('levelNameInput')) $('levelNameInput').value=''; if ($('levelDifficultyInput')) $('levelDifficultyInput').value=50; if ($('levelNumberInput')) $('levelNumberInput').value=''; if ($('levelTagsInput')) $('levelTagsInput').value=''; if ($('levelIdInput')) $('levelIdInput').value=''; if ($('levelShowcaseInput')) $('levelShowcaseInput').value=''; if ($('rangeDisplay')) $('rangeDisplay').textContent='50'; if ($('rangeValue')) $('rangeValue').textContent='50'; if ($('modalOk')) $('modalOk').textContent='OK'; if ($('modalOverlay')) { delete $('modalOverlay').dataset.editId; $('modalOverlay').classList.add('active'); } });
+    if ($('levelDifficultyInput')) $('levelDifficultyInput').addEventListener('input', ()=>{ if ($('rangeDisplay')) $('rangeDisplay').textContent=$('levelDifficultyInput').value; if ($('rangeValue')) $('rangeValue').textContent=$('levelDifficultyInput').value; });
+    if ($('modalCancel')) $('modalCancel').addEventListener('click', ()=>$('modalOverlay').classList.remove('active'));
+    if ($('modalOk')) $('modalOk').addEventListener('click', async () => { const name=($('levelNameInput')?.value||'').trim(), diff=parseInt($('levelDifficultyInput')?.value||50), pts=parseFloat($('levelNumberInput')?.value||0), tagsS=($('levelTagsInput')?.value||'').trim(), tags=tagsS?tagsS.split(',').map(t=>t.trim().toLowerCase()).filter(t=>t):[], customId=($('levelIdInput')?.value||'').trim(), showcase=($('levelShowcaseInput')?.value||'').trim(); if(!name||isNaN(pts))return; const editId = $('modalOverlay')?.dataset.editId; if (editId) { try { await sb.from('levels').update({ title:name, difficulty:diff, points:pts, custom_id:customId, showcase:showcase, tags:tags.join(',') }).eq('id', editId); } catch(er){} const idx=levels.findIndex(l=>l.id==parseInt(editId)); if(idx!==-1){ levels[idx]={...levels[idx],title:name,difficulty:diff,points:pts,name,number:pts,custom_id:customId,showcase:showcase}; setTags(editId,tags); } achStats.edited=true; checkAchievements(); } else { try { const { data } = await sb.from('levels').insert({ title:name, difficulty:diff, points:pts, custom_id:customId, showcase:showcase, tags:tags.join(',') }).select().single(); if (data) { data.name=data.title; data.number=data.points; levels.push(data); setTags(data.id, tags); checkAchievements(); } } catch(er) { console.error(er); } } if ($('modalOverlay')) $('modalOverlay').classList.remove('active'); renderCurrentTab(); });
+    if ($('ticketCancel')) $('ticketCancel').addEventListener('click', ()=>{ if ($('ticketOverlay')) $('ticketOverlay').classList.remove('active'); ticketLevelId=null; });
+    if ($('ticketSubmit')) $('ticketSubmit').addEventListener('click', async () => { const link = ($('ticketVideoLink')?.value||'').trim(); if (!link || !ticketLevelId) return; try { await sb.from('moderation_requests').insert({ user_id:currentUser.id, level_id:ticketLevelId, video_link:link, status:'pending' }); } catch(er) { console.error(er); } if ($('ticketOverlay')) $('ticketOverlay').classList.remove('active'); ticketLevelId=null; });
+    if ($('copyBtn')) $('copyBtn').addEventListener('click', () => { const src = currentTab==='legacy'?legacyLevels:levels; if (!src.length) return; const sorted = getSorted(src); let txt = ''; sorted.forEach((l,i)=>{ const t=getTags(l.id); txt+=`${i+1}. ${l.title||l.name} — difficulty: ${l.difficulty}, points: ${formatPoints(l.points||l.number)}${t.length?' | '+t.join(', '):''}\n`; }); navigator.clipboard.writeText(txt.trim()).then(()=>{ $('copyTooltip').classList.add('show'); setTimeout(()=>$('copyTooltip').classList.remove('show'),1500); }).catch(()=>{}); achStats.copiedList=true; checkAchievements(); });
+    if ($('avatarBtn')) $('avatarBtn').addEventListener('click', showOwnProfile);
+    if ($('backBtn')) $('backBtn').addEventListener('click', ()=>{ if ($('profilePage')) $('profilePage').classList.remove('active'); if ($('app')) $('app').style.display='block'; const tabs=document.querySelector('.tabs'); if(tabs)tabs.style.display='flex'; if ($('searchWrapper')) $('searchWrapper').style.display='block'; if(currentTab==='list'&&currentUser&&isAdmin&&$('bottomBar'))$('bottomBar').style.display='flex'; renderCurrentTab(); });
+    if ($('profileNameInput')) $('profileNameInput').addEventListener('input', async ()=>{ if(!viewingOwnProfile)return; profileName=$('profileNameInput').value||'Uruman'; if(currentUser) try { await sb.from('profiles').update({username:profileName}).eq('id',currentUser.id); } catch(er){} updateUI(); });
+    if ($('copyProfileBtn')) $('copyProfileBtn').addEventListener('click', ()=>{ let t=`Profile: ${profileName}\nPoints: ${formatPoints(totalPoints)}\nCompleted: ${completedIds.length}\n\nCompleted Levels:\n`; const s=getSorted(levels); completedIds.slice().reverse().forEach(id=>{ const l=levels.find(x=>x.id===id); if(l){ const r=s.findIndex(x=>x.id===id)+1,tgs=getTags(l.id); t+=`#${r} ${l.title||l.name} — diff: ${l.difficulty}, pts: ${formatPoints(l.points||l.number)}${tgs.length?' | '+tgs.join(', '):''}\n`; } }); navigator.clipboard.writeText(t.trim()).then(()=>{}).catch(()=>{}); });
+    if ($('exportBtn')) $('exportBtn').addEventListener('click',()=>{const d={levels,totalPoints,completedIds,profileName,version:4};const b=new Blob([JSON.stringify(d)],{type:'application/json'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='pointer-made-backup.json';a.click();URL.revokeObjectURL(u);achStats.exported=true;checkAchievements();});
+    if ($('importBtn')) $('importBtn').addEventListener('click',()=>$('importFileInput').click());
+    if ($('importFileInput')) $('importFileInput').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const d=JSON.parse(ev.target.result);levels=d.levels||[];totalPoints=d.totalPoints||0;completedIds=d.completedIds||[];profileName=d.profileName||'Uruman';renderCurrentTab();}catch(er){}};r.readAsText(f);});
+    if ($('levelTagsInput')) $('levelTagsInput').addEventListener('input', function() { const v=this.value,li=v.lastIndexOf(','),after=li>=0?v.substring(li+1).trim():v.trim(),parts=v.split(',').map(p=>p.trim().toLowerCase()); if(!after){if($('tagSuggestions'))$('tagSuggestions').classList.remove('show');return;} const used=new Set(parts.filter(p=>p)),filtered=allTags.filter(t=>t.startsWith(after.toLowerCase())&&!used.has(t)); if(!filtered.length){if($('tagSuggestions'))$('tagSuggestions').classList.remove('show');return;} if($('tagSuggestions')){$('tagSuggestions').innerHTML='';filtered.slice(0,6).forEach(tag=>{const el=document.createElement('div');el.className='tag-suggestion-item';el.textContent=tag;el.addEventListener('mousedown',e=>{e.preventDefault();const np=parts.slice(0,-1);np.push(tag);$('levelTagsInput').value=np.join(', ')+', ';$('tagSuggestions').classList.remove('show');$('levelTagsInput').focus();});$('tagSuggestions').appendChild(el);});$('tagSuggestions').classList.add('show');} });
+    document.addEventListener('click',e=>{if($('levelTagsInput')&&$('tagSuggestions')&&!$('levelTagsInput').contains(e.target)&&!$('tagSuggestions').contains(e.target))$('tagSuggestions').classList.remove('show');});
+    if ($('signInBtn')) $('signInBtn').addEventListener('click',()=>$('authOverlay').style.display='flex');
+    let isLoginMode=true;
+    if ($('authSwitchBtn')) $('authSwitchBtn').addEventListener('click',()=>{isLoginMode=!isLoginMode;if($('authSubmitBtn'))$('authSubmitBtn').textContent=isLoginMode?'Sign In':'Create Account';if($('authSwitchBtn'))$('authSwitchBtn').textContent=isLoginMode?'Create account':'Back to sign in';if($('authError'))$('authError').textContent='';});
+    if ($('authSubmitBtn')) $('authSubmitBtn').addEventListener('click',async()=>{ const email=($('authEmail')?.value||'').trim(),pw=$('authPassword')?.value||''; if(!email||!pw){if($('authError'))$('authError').textContent='Enter email and password';return;} if(isLoginMode){const{data,error}=await sb.auth.signInWithPassword({email,password:pw});if(error){if($('authError'))$('authError').textContent=error.message;return;}currentUser=data.user;await loadUserData(currentUser.id);if($('authOverlay'))$('authOverlay').style.display='none';showLoggedIn();} else{const{data,error}=await sb.auth.signUp({email,password:pw});if(error){if($('authError'))$('authError').textContent=error.message;return;}if(data.user){currentUser=data.user;try{await sb.from('profiles').insert({id:currentUser.id,username:email.split('@')[0],total_score:0,levels_completed:0});}catch(er){}await loadUserData(currentUser.id);if($('authOverlay'))$('authOverlay').style.display='none';showLoggedIn();}} });
+    if ($('logoutBtn')) $('logoutBtn').addEventListener('click',async()=>{await sb.auth.signOut();location.reload();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('modalOverlay')&&$('modalOverlay').classList.contains('active'))$('modalOverlay').classList.remove('active');if($('ticketOverlay')&&$('ticketOverlay').classList.contains('active'))$('ticketOverlay').classList.remove('active');if($('profilePage')&&$('profilePage').classList.contains('active')&&$('backBtn'))$('backBtn').click();}});
+    (async function init() { try { const {data:{session}} = await sb.auth.getSession(); if (session) { currentUser=session.user; await loadUserData(currentUser.id); showLoggedIn(); } else { await loadLevelsFromDB(); renderCurrentTab(); } initAchStats(); checkAchievements(); } catch(e) { console.error('Init error:', e); await loadLevelsFromDB(); renderCurrentTab(); } })();
+});
+
+function showLoggedIn() { if ($('guestBadge')) $('guestBadge').style.display='none'; if ($('signInBtn')) $('signInBtn').style.display='none'; if ($('pointsBadge')) $('pointsBadge').style.display='block'; if ($('avatarBtn')) $('avatarBtn').style.display='flex'; if ($('logoutBtn')) $('logoutBtn').style.display='block'; if(isAdmin){ if ($('modTab')) $('modTab').style.display='block'; if ($('bottomBar')) $('bottomBar').style.display='flex'; } viewingOwnProfile=true; updateUI(); renderCurrentTab(); }
+</script>
+</body>
+</html>
