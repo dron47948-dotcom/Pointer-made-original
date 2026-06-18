@@ -9,6 +9,8 @@
         :root {
             --bg: #ffffff; --surface: #f5f5f5; --card: #fafafa; --border: #e0e0e0;
             --text: #111111; --sub: #666666; --accent: #333333; --accent-hover: #555555;
+            --green: #2e7d32; --green-bg: rgba(46,125,50,0.1); --red: #c62828;
+            --gold: #b8860b; --gold-bg: rgba(184,134,11,0.1);
         }
         * { margin:0; padding:0; box-sizing:border-box; }
         body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif; min-height:100vh; display:flex; justify-content:center; -webkit-font-smoothing:antialiased; }
@@ -26,9 +28,9 @@
         .auth-modal button:hover { background:var(--accent-hover); }
         .auth-switch { text-align:center; margin-top:14px; color:var(--sub); font-size:12px; }
         .auth-switch span { color:var(--accent); cursor:pointer; font-weight:500; }
-        .auth-error { color:#c62828; font-size:12px; text-align:center; margin-top:6px; }
+        .auth-error { color:var(--red); font-size:12px; text-align:center; margin-top:6px; }
         .logout-btn { background:var(--surface); border:1px solid var(--border); padding:6px 12px; border-radius:4px; color:var(--sub); cursor:pointer; font-size:12px; transition:all 0.2s; }
-        .logout-btn:hover { border-color:#c62828; color:#c62828; }
+        .logout-btn:hover { border-color:var(--red); color:var(--red); }
         .sign-in-btn { background:var(--accent); border:none; color:#fff; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:500; }
         .sign-in-btn:hover { background:var(--accent-hover); }
 
@@ -36,6 +38,8 @@
         .header-left { display:flex; align-items:center; gap:8px; }
         .header-title { font-size:18px; font-weight:600; color:var(--text); }
         .header-right { display:flex; align-items:center; gap:10px; }
+        .avatar { width:30px; height:30px; border-radius:4px; background:var(--surface); border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; color:var(--accent); }
+        .avatar:hover { border-color:var(--accent); }
         .guest-badge { color:var(--sub); font-size:12px; }
 
         .tabs { display:flex; padding:0 24px; border-bottom:1px solid var(--border); background:var(--bg); }
@@ -67,6 +71,10 @@
         .level-difficulty { font-size:10px; color:var(--sub); margin-top:2px; }
         .level-difficulty strong { color:var(--text); font-weight:500; }
         .new-badge { font-size:9px; padding:2px 7px; border-radius:3px; font-weight:500; background:#e8f5e9; color:#2e7d32; margin-left:4px; }
+        .level-actions { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+        .complete-btn { width:28px; height:28px; border-radius:4px; background:var(--surface); border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; color:var(--green); transition: all 0.2s ease; }
+        .complete-btn:hover:not(.completed) { background:var(--green-bg); border-color:var(--green); transform: scale(1.15); }
+        .complete-btn.completed { opacity:0.5; cursor:default; }
 
         .bottom-bar { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:750px; padding:12px 24px; background:rgba(255,255,255,0.95); border-top:1px solid var(--border); display:flex; gap:8px; z-index:40; }
         .add-btn { width:36px; height:36px; border-radius:6px; background:var(--accent); border:none; color:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: all 0.2s ease; }
@@ -77,7 +85,7 @@
         .modal { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:22px 24px; width:380px; box-shadow:0 4px 20px rgba(0,0,0,0.08); animation:slideDown 0.2s ease; }
         .modal h2 { font-size:15px; margin-bottom:14px; font-weight:500; }
         .modal label { display:block; font-size:10px; color:var(--sub); margin-bottom:3px; margin-top:12px; text-transform:uppercase; letter-spacing:0.6px; font-weight:500; }
-        .modal input[type="text"], .modal input[type="number"] { width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:13px; font-family:inherit; outline:none; }
+        .modal input[type="text"], .modal input[type="number"], .modal input[type="url"] { width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:13px; font-family:inherit; outline:none; }
         .modal input:focus { border-color:var(--accent); }
         .modal-hint { font-size:9px; color:var(--sub); margin-top:2px; }
         .modal-buttons { display:flex; gap:6px; margin-top:18px; justify-content:flex-end; }
@@ -91,6 +99,35 @@
         .tag-suggestions.show { display:block; }
         .tag-suggestion-item { padding:7px 10px; font-size:11px; cursor:pointer; color:var(--text); }
         .tag-suggestion-item:hover { background:var(--surface); }
+
+        .profile-page { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:var(--bg); z-index:200; overflow-y:auto; }
+        .profile-page.active { display:block; }
+        .profile-container { max-width:500px; margin:0 auto; padding:20px; }
+        .profile-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+        .back-btn { background:var(--surface); border:1px solid var(--border); color:var(--text); padding:6px 12px; border-radius:4px; cursor:pointer; font-size:12px; font-family:inherit; }
+        .profile-avatar { width:56px; height:56px; border-radius:6px; background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:600; color:var(--accent); margin:0 auto 12px; }
+        .profile-name-input { display:block; width:100%; max-width:250px; margin:0 auto 4px; text-align:center; background:transparent; border:none; border-bottom:1px solid var(--border); color:var(--text); font-size:18px; font-weight:500; padding:5px 0; font-family:inherit; outline:none; }
+        .profile-name-input:focus { border-bottom-color:var(--accent); }
+        .profile-subtitle { text-align:center; color:var(--sub); font-size:11px; margin-bottom:20px; }
+        .profile-stat { background:var(--card); border:1px solid var(--border); border-radius:4px; padding:10px 14px; margin-bottom:3px; display:flex; justify-content:space-between; }
+        .profile-stat-label { color:var(--sub); font-size:11px; }
+        .profile-stat-value { font-weight:500; font-size:13px; }
+        .profile-section { margin-top:18px; }
+        .profile-section h3 { font-size:10px; color:var(--sub); margin-bottom:5px; text-transform:uppercase; letter-spacing:0.8px; }
+        .profile-completed-item { background:var(--card); border:1px solid var(--border); border-radius:3px; padding:8px 12px; margin-bottom:2px; font-size:12px; }
+
+        .mod-card { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:12px 14px; margin-bottom:4px; }
+        .mod-card .mod-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+        .mod-card .mod-user { font-weight:500; font-size:13px; }
+        .mod-card .mod-level { font-size:12px; color:var(--sub); }
+        .mod-card .mod-link { color:var(--accent); font-size:11px; word-break:break-all; display:block; margin:3px 0; }
+        .mod-card .mod-status { font-size:10px; padding:2px 7px; border-radius:3px; font-weight:500; }
+        .mod-status.pending { background:var(--gold-bg); color:var(--gold); }
+        .mod-status.approved { background:var(--green-bg); color:var(--green); }
+        .mod-status.rejected { background:rgba(198,40,40,0.1); color:var(--red); }
+        .mod-card .mod-actions { display:flex; gap:6px; margin-top:8px; }
+        .btn-approve { background:var(--green); color:#fff; border:none; padding:5px 12px; border-radius:3px; cursor:pointer; font-size:11px; font-family:inherit; }
+        .btn-reject { background:var(--red); color:#fff; border:none; padding:5px 12px; border-radius:3px; cursor:pointer; font-size:11px; font-family:inherit; }
     </style>
 </head>
 <body>
@@ -101,6 +138,7 @@
         <div class="header-right" id="headerRight">
             <span class="guest-badge" id="guestBadge">Guest</span>
             <button class="sign-in-btn" id="signInBtn">Sign In</button>
+            <button class="avatar" id="avatarBtn" style="display:none;">U</button>
             <button class="logout-btn" id="logoutBtn" style="display:none;">Exit</button>
         </div>
     </div>
@@ -108,6 +146,7 @@
     <div class="tabs" id="tabs">
         <button class="tab-btn active" data-tab="all">All</button>
         <button class="tab-btn" data-tab="new">New</button>
+        <button class="tab-btn" data-tab="moderation" id="modTab" style="display:none;">Moderation</button>
     </div>
 
     <div class="filter-bar" id="filterBar">
@@ -122,6 +161,7 @@
         <div class="list-header"><span class="list-header-label" id="listHeaderLabel">Levels</span><span class="list-header-label" style="font-size:9px;" id="listCount">0</span></div>
         <div class="empty-state" id="emptyState">List is empty</div>
         <div class="level-list" id="levelList"></div>
+        <div id="modList" style="display:none;"></div>
     </div>
 </div>
 
@@ -141,6 +181,16 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="ticketOverlay">
+    <div class="modal">
+        <h2>Submit Completion</h2>
+        <p style="font-size:11px;color:var(--sub);margin-bottom:12px;">Completing: <strong id="ticketLevelName"></strong></p>
+        <label>Video Link</label><input type="url" id="ticketVideoLink" placeholder="https://youtu.be/...">
+        <p class="modal-hint">Show your profile + replay of the level</p>
+        <div class="modal-buttons"><button class="btn-cancel" id="ticketCancel">Cancel</button><button class="btn-ok" id="ticketSubmit">Submit</button></div>
+    </div>
+</div>
+
 <div class="auth-overlay" id="authOverlay" style="display:none;">
     <div class="auth-modal">
         <h2>I Wanna Maker List</h2>
@@ -151,72 +201,78 @@
     </div>
 </div>
 
+<div class="profile-page" id="profilePage">
+    <div class="profile-container">
+        <div class="profile-header"><button class="back-btn" id="backBtn">← Back</button></div>
+        <div class="profile-avatar" id="profileAvatar">U</div>
+        <input type="text" class="profile-name-input" id="profileNameInput" value="Player" maxlength="20" disabled>
+        <p class="profile-subtitle">I Wanna Maker player</p>
+        <div class="profile-stat"><span class="profile-stat-label">Completed</span><span class="profile-stat-value" id="profileCompletedCount">0</span></div>
+        <div class="profile-section"><h3>Completed Levels</h3><div id="profileCompletedList"></div></div>
+    </div>
+</div>
+
 <script>
 const SUPABASE_URL = 'https://msnijweenzlyqvcjhefx.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_Rdz9P50sdBvpscdi79cYZg_xHndxy1B';
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let currentUser = null, isAdmin = false, currentTab = 'all', activeFilter = '';
-let levels = [], allTags = [], levelTags = {};
+let currentUser = null, isAdmin = false, currentTab = 'all', ticketLevelId = null, activeFilter = '';
+let levels = [], completedIds = [], profileName = 'Player';
+let allTags = [], levelTags = {};
+let viewingOwnProfile = true;
 
 const $ = id => document.getElementById(id);
 function escapeHTML(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
-function sortLevels(a, b) {
-    if (currentTab === 'new') return new Date(b.created_at||0) - new Date(a.created_at||0);
-    if (+b.difficulty !== +a.difficulty) return +b.difficulty - +a.difficulty;
-    return (a.title||'').localeCompare(b.title||'');
-}
+function sortLevels(a, b) { if (currentTab==='new') return new Date(b.created_at||0) - new Date(a.created_at||0); if (+b.difficulty !== +a.difficulty) return +b.difficulty - +a.difficulty; return (a.title||'').localeCompare(b.title||''); }
 function getSorted(source) { return (source||[]).slice().sort(sortLevels); }
 function getTags(id) { return levelTags[id] || []; }
 function setTags(id, tags) { const c = tags.map(t => t.trim().toLowerCase()).filter(t => t); levelTags[id] = c; c.forEach(t => { if (!allTags.includes(t)) allTags.push(t); }); }
 function isNew(level) { return level.created_at && (new Date() - new Date(level.created_at)) < 7 * 24 * 60 * 60 * 1000; }
 
-async function loadLevelsFromDB() {
-    try {
-        const { data } = await sb.from('levels').select('*');
-        levels = (data||[]).map(l => ({...l, name:l.title, difficulty:l.difficulty}));
-        levels.forEach(l => { if (l.tags && !levelTags[l.id]) levelTags[l.id] = l.tags.split(',').map(t => t.trim()).filter(t => t); });
-    } catch(e) { console.error(e); levels = []; }
-}
-
+async function loadLevelsFromDB() { try { const { data } = await sb.from('levels').select('*'); levels = (data||[]).map(l => ({...l, name:l.title, difficulty:l.difficulty})); levels.forEach(l => { if (l.tags && !levelTags[l.id]) levelTags[l.id] = l.tags.split(',').map(t => t.trim()).filter(t => t); }); } catch(e) { console.error(e); levels = []; } }
 async function loadUserData(userId) {
     try {
         const { data: profile } = await sb.from('profiles').select('*').eq('id', userId).maybeSingle();
-        if (!profile) { await sb.from('profiles').insert({ id: userId, username: 'Player', total_score: 0, levels_completed: 0 }); isAdmin = false; }
-        else { isAdmin = (profile.username === 'admin'); }
-        const ud = profile?.user_data || {};
+        if (!profile) { await sb.from('profiles').insert({ id: userId, username: 'Player', total_score: 0, levels_completed: 0 }); profileName = 'Player'; completedIds = []; isAdmin = false; allTags = []; levelTags = {}; await loadLevelsFromDB(); updateUI(); renderCurrentTab(); return; }
+        profileName = profile.username || 'Player';
+        const { data: ul } = await sb.from('user_levels').select('level_id').eq('user_id', userId);
+        completedIds = ul ? ul.map(r => r.level_id) : [];
+        const ud = profile.user_data || {};
         allTags = ud.allTags || []; levelTags = ud.levelTags || {};
+        isAdmin = (profileName === 'admin');
         await loadLevelsFromDB();
     } catch(e) { console.error(e); }
 }
 
+function updateUI() { if ($('profileCompletedCount')) $('profileCompletedCount').textContent = completedIds.length; const init = (profileName||'U').charAt(0).toUpperCase(); if ($('avatarBtn')) $('avatarBtn').textContent = init; if ($('profileAvatar')) $('profileAvatar').textContent = init; if ($('profileNameInput')) $('profileNameInput').value = profileName; }
 function renderCurrentTab() {
-    if ($('listHeaderLabel')) $('listHeaderLabel').textContent = currentTab==='new'?'New Levels':'Levels';
-    renderLevels();
+    if ($('levelList')) $('levelList').style.display = currentTab==='moderation'?'none':'flex';
+    if ($('modList')) $('modList').style.display = currentTab==='moderation'?'block':'none';
+    if ($('filterBar')) $('filterBar').style.display = currentTab==='moderation'?'none':'flex';
+    if ($('searchWrapper')) $('searchWrapper').style.display = currentTab==='moderation'?'none':'block';
+    if ($('listHeaderLabel')) $('listHeaderLabel').textContent = currentTab==='new'?'New Levels':(currentTab==='moderation'?'Moderation':'Levels');
+    if (currentTab==='moderation') { renderModeration(); } else { renderLevels(); }
     updateFilters();
+    updateUI();
 }
 function renderLevels() {
-    const list = $('levelList'); if (!list) return;
-    const q = ($('searchInput')?.value||'').toLowerCase();
-    list.innerHTML = '';
+    const list = $('levelList'); if (!list) return; const q = ($('searchInput')?.value||'').toLowerCase(); list.innerHTML = '';
     if (!levels.length) { if ($('emptyState')) { $('emptyState').style.display='block'; } list.style.display='none'; if ($('listCount')) $('listCount').textContent='0'; return; }
-    let filtered = levels.filter(l => {
-        if (currentTab==='new' && !isNew(l)) return false;
-        const matchName = (l.title||'').toLowerCase().includes(q);
-        const matchTag = getTags(l.id).some(t => t.includes(q));
-        const matchFilter = !activeFilter || getTags(l.id).includes(activeFilter);
-        return (matchName||matchTag) && matchFilter;
-    });
+    let filtered = levels.filter(l => { if (currentTab==='new' && !isNew(l)) return false; const matchName = (l.title||'').toLowerCase().includes(q); const matchTag = getTags(l.id).some(t => t.includes(q)); const matchFilter = !activeFilter || getTags(l.id).includes(activeFilter); return (matchName||matchTag) && matchFilter; });
     const sorted = getSorted(filtered);
     if (!sorted.length) { if ($('emptyState')) { $('emptyState').style.display='block'; } list.style.display='none'; if ($('listCount')) $('listCount').textContent='0'; return; }
     if ($('emptyState')) $('emptyState').style.display='none'; list.style.display='flex'; if ($('listCount')) $('listCount').textContent = sorted.length;
     sorted.forEach((l, i) => {
-        const rank = currentTab==='new'?'' : i+1;
+        const rank = currentTab==='new'?'' : i+1, isDone = completedIds.includes(l.id);
         const card = document.createElement('div'); card.className = 'level-card';
         const tags = getTags(l.id), tagsHTML = tags.length ? '<div class="level-tags">'+tags.map(t=>`<span class="level-tag">${escapeHTML(t)}</span>`).join('')+'</div>' : '';
         const newBadge = isNew(l) ? '<span class="new-badge">NEW</span>' : '';
-        card.innerHTML = `<span class="level-rank">${rank?'#'+rank:''}</span><div class="level-info"><div class="level-name">${escapeHTML(l.title||l.name)}${newBadge}</div>${tagsHTML}<div class="level-difficulty">difficulty: <strong>${parseInt(l.difficulty||0)}</strong></div></div>`;
+        let actionsHTML = '';
+        if (currentUser) { actionsHTML = '<div class="level-actions">'; actionsHTML += `<button class="complete-btn ${isDone?'completed':''}" data-id="${l.id}">✓</button>`; actionsHTML += '</div>'; }
+        card.innerHTML = `<span class="level-rank">${rank?'#'+rank:''}</span><div class="level-info"><div class="level-name">${escapeHTML(l.title||l.name)}${newBadge}</div>${tagsHTML}<div class="level-difficulty">difficulty: <strong>${parseInt(l.difficulty||0)}</strong></div></div>${actionsHTML}`;
         list.appendChild(card);
+        if (currentUser) { const completeBtn = card.querySelector('.complete-btn'); if (completeBtn) completeBtn.addEventListener('click', e => { e.stopPropagation(); if (!isDone) openTicketModal(l); }); }
     });
 }
 function updateFilters() {
@@ -225,12 +281,35 @@ function updateFilters() {
     allTags.forEach(tag => { bar.innerHTML += `<span class="filter-tag${activeFilter===tag?' active':''}" data-tag="${tag}">${tag}</span>`; });
     bar.querySelectorAll('.filter-tag').forEach(el => el.addEventListener('click', function() { activeFilter = this.dataset.tag; renderCurrentTab(); }));
 }
+function openTicketModal(level) { ticketLevelId = level.id; if ($('ticketLevelName')) $('ticketLevelName').textContent = level.title||level.name; if ($('ticketVideoLink')) $('ticketVideoLink').value = ''; if ($('ticketOverlay')) $('ticketOverlay').classList.add('active'); }
+
+async function renderModeration() {
+    const list = $('modList'); if (!list) return; list.innerHTML = '';
+    try {
+        const { data: tickets } = await sb.from('moderation_requests').select('*').order('created_at', { ascending: false });
+        if (!tickets || !tickets.length) { list.innerHTML = '<div class="empty-state">No tickets</div>'; return; }
+        for (const t of tickets) {
+            const { data: userData } = await sb.from('profiles').select('username').eq('id', t.user_id).maybeSingle();
+            const { data: levelData } = await sb.from('levels').select('title').eq('id', t.level_id).maybeSingle();
+            const card = document.createElement('div'); card.className = 'mod-card';
+            card.innerHTML = `<div class="mod-header"><span class="mod-user">${escapeHTML(userData?.username||'Unknown')}</span><span class="mod-status ${t.status}">${t.status}</span></div><div class="mod-level">${escapeHTML(levelData?.title||'Unknown')}</div><a class="mod-link" href="${t.video_link}" target="_blank">${t.video_link}</a>${t.status==='pending'?`<div class="mod-actions"><button class="btn-approve" data-id="${t.id}" data-user="${t.user_id}" data-level="${t.level_id}">Approve</button><button class="btn-reject" data-id="${t.id}">Reject</button></div>`:''}`;
+            list.appendChild(card);
+            card.querySelector('.btn-approve')?.addEventListener('click', async function() { try { await sb.from('moderation_requests').update({ status:'approved' }).eq('id', this.dataset.id); const { data: prof } = await sb.from('profiles').select('*').eq('id', this.dataset.user).maybeSingle(); if (prof) { await sb.from('profiles').update({ levels_completed:(prof.levels_completed||0)+1 }).eq('id', this.dataset.user); await sb.from('user_levels').upsert({ user_id:this.dataset.user, level_id:parseInt(this.dataset.level) }); } } catch(er) {} renderModeration(); });
+            card.querySelector('.btn-reject')?.addEventListener('click', async function() { try { await sb.from('moderation_requests').update({ status:'rejected' }).eq('id', this.dataset.id); } catch(er){} renderModeration(); });
+        }
+    } catch(e) { list.innerHTML = '<div class="empty-state">Error</div>'; }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     if ($('searchInput')) $('searchInput').addEventListener('input', renderCurrentTab);
     if ($('addBtn')) $('addBtn').addEventListener('click', () => { if (!isAdmin) return; if ($('modalTitle')) $('modalTitle').textContent='New Level'; if ($('levelNameInput')) $('levelNameInput').value=''; if ($('levelDifficultyInput')) $('levelDifficultyInput').value=''; if ($('levelTagsInput')) $('levelTagsInput').value=''; if ($('modalOk')) $('modalOk').textContent='OK'; if ($('modalOverlay')) { delete $('modalOverlay').dataset.editId; $('modalOverlay').classList.add('active'); } });
     if ($('modalCancel')) $('modalCancel').addEventListener('click', ()=>$('modalOverlay').classList.remove('active'));
     if ($('modalOk')) $('modalOk').addEventListener('click', async () => { const name=($('levelNameInput')?.value||'').trim(), diff=parseInt($('levelDifficultyInput')?.value||0), tagsS=($('levelTagsInput')?.value||'').trim(), tags=tagsS?tagsS.split(',').map(t=>t.trim().toLowerCase()).filter(t=>t):[]; if(!name||isNaN(diff))return; try { const { data } = await sb.from('levels').insert({ title:name, difficulty:diff, tags:tags.join(','), points:0, created_at:new Date().toISOString() }).select().single(); if (data) { data.name=data.title; data.difficulty=data.difficulty; levels.push(data); setTags(data.id, tags); } } catch(er) { console.error(er); } if ($('modalOverlay')) $('modalOverlay').classList.remove('active'); renderCurrentTab(); });
+    if ($('ticketCancel')) $('ticketCancel').addEventListener('click', ()=>{ if ($('ticketOverlay')) $('ticketOverlay').classList.remove('active'); ticketLevelId=null; });
+    if ($('ticketSubmit')) $('ticketSubmit').addEventListener('click', async () => { const link = ($('ticketVideoLink')?.value||'').trim(); if (!link || !ticketLevelId) return; try { await sb.from('moderation_requests').insert({ user_id:currentUser.id, level_id:ticketLevelId, video_link:link, status:'pending' }); } catch(er) {} if ($('ticketOverlay')) $('ticketOverlay').classList.remove('active'); ticketLevelId=null; });
+    if ($('avatarBtn')) $('avatarBtn').addEventListener('click', ()=>{ viewingOwnProfile=true; if ($('profilePage')) { $('profilePage').classList.add('active'); $('app').style.display='none'; } if ($('profileNameInput')) $('profileNameInput').disabled=false; renderProfileCompleted(); updateUI(); });
+    if ($('backBtn')) $('backBtn').addEventListener('click', ()=>{ if ($('profilePage')) $('profilePage').classList.remove('active'); if ($('app')) $('app').style.display='block'; renderCurrentTab(); });
+    if ($('profileNameInput')) $('profileNameInput').addEventListener('input', async ()=>{ if(!viewingOwnProfile)return; const newName=$('profileNameInput').value||'Player'; if(newName.toLowerCase()==='admin'&&profileName.toLowerCase()!=='admin'){ $('profileNameInput').value=profileName; return; } profileName=newName; if(currentUser) try { await sb.from('profiles').update({username:profileName}).eq('id',currentUser.id); } catch(er){} updateUI(); });
     if ($('levelTagsInput')) $('levelTagsInput').addEventListener('input', function() { const v=this.value,li=v.lastIndexOf(','),after=li>=0?v.substring(li+1).trim():v.trim(),parts=v.split(',').map(p=>p.trim().toLowerCase()); if(!after){if($('tagSuggestions'))$('tagSuggestions').classList.remove('show');return;} const used=new Set(parts.filter(p=>p)),filtered=allTags.filter(t=>t.startsWith(after.toLowerCase())&&!used.has(t)); if(!filtered.length){if($('tagSuggestions'))$('tagSuggestions').classList.remove('show');return;} if($('tagSuggestions')){$('tagSuggestions').innerHTML='';filtered.slice(0,6).forEach(tag=>{const el=document.createElement('div');el.className='tag-suggestion-item';el.textContent=tag;el.addEventListener('mousedown',e=>{e.preventDefault();const np=parts.slice(0,-1);np.push(tag);$('levelTagsInput').value=np.join(', ')+', ';$('tagSuggestions').classList.remove('show');$('levelTagsInput').focus();});$('tagSuggestions').appendChild(el);});$('tagSuggestions').classList.add('show');} });
     document.addEventListener('click',e=>{if($('levelTagsInput')&&$('tagSuggestions')&&!$('levelTagsInput').contains(e.target)&&!$('tagSuggestions').contains(e.target))$('tagSuggestions').classList.remove('show');});
     if ($('signInBtn')) $('signInBtn').addEventListener('click',()=>$('authOverlay').style.display='flex');
@@ -241,7 +320,8 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', function() { document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active')); this.classList.add('active'); currentTab = this.dataset.tab; renderCurrentTab(); }));
     (async function init() { try { const {data:{session}} = await sb.auth.getSession(); if (session) { currentUser=session.user; await loadUserData(currentUser.id); showLoggedIn(); } else { await loadLevelsFromDB(); renderCurrentTab(); } } catch(e) { await loadLevelsFromDB(); renderCurrentTab(); } })();
 });
-function showLoggedIn() { if ($('guestBadge')) $('guestBadge').style.display='none'; if ($('signInBtn')) $('signInBtn').style.display='none'; if ($('logoutBtn')) $('logoutBtn').style.display='block'; if(isAdmin){ if ($('bottomBar')) $('bottomBar').style.display='flex'; } renderCurrentTab(); }
+function showLoggedIn() { if ($('guestBadge')) $('guestBadge').style.display='none'; if ($('signInBtn')) $('signInBtn').style.display='none'; if ($('avatarBtn')) $('avatarBtn').style.display='flex'; if ($('logoutBtn')) $('logoutBtn').style.display='block'; if(isAdmin){ if ($('modTab')) $('modTab').style.display='block'; if ($('bottomBar')) $('bottomBar').style.display='flex'; } viewingOwnProfile=true; updateUI(); renderCurrentTab(); }
+function renderProfileCompleted() { const c = $('profileCompletedList'); if (!c) return; c.innerHTML = ''; if (!completedIds.length) { c.innerHTML = '<p style="color:var(--sub);font-size:11px;">Nothing yet</p>'; return; } const sorted = getSorted(levels); completedIds.slice().reverse().forEach(id => { const l = levels.find(x => x.id===id); if (!l) return; const rank = sorted.findIndex(x => x.id===id)+1; c.innerHTML += `<div class="profile-completed-item">#${rank} ${escapeHTML(l.title)} — diff: ${parseInt(l.difficulty||0)}</div>`; }); }
 </script>
 </body>
 </html>
