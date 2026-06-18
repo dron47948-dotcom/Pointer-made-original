@@ -6,141 +6,96 @@
     <title>I Wanna Maker — Level List</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root {
-            --bg: #ffffff; --surface: #f5f5f5; --card: #fafafa; --border: #e0e0e0;
-            --text: #111111; --sub: #666666; --accent: #333333; --accent-hover: #555555;
-        }
+        :root { --bg:#fff; --surface:#f5f5f5; --card:#fafafa; --border:#e0e0e0; --text:#111; --sub:#666; --accent:#333; --accent-hover:#555; }
         * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,-apple-system,sans-serif; min-height:100vh; display:flex; justify-content:center; }
-        .app { width:750px; min-height:100vh; background:var(--bg); position:relative; border-left:1px solid var(--border); border-right:1px solid var(--border); }
-
+        body { background:var(--bg); color:var(--text); font-family:'Segoe UI',sans-serif; min-height:100vh; display:flex; justify-content:center; }
+        .app { width:750px; min-height:100vh; background:var(--bg); border-left:1px solid var(--border); border-right:1px solid var(--border); }
         @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes slideDown { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
-
         .auth-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.97); display:flex; align-items:center; justify-content:center; z-index:1000; }
-        .auth-modal { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:28px; width:360px; box-shadow:0 2px 12px rgba(0,0,0,0.06); }
-        .auth-modal h2 { color:var(--text); margin-bottom:20px; font-size:22px; text-align:center; font-weight:600; }
-        .auth-modal input { width:100%; padding:10px; background:var(--bg); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:14px; margin-bottom:10px; font-family:inherit; }
-        .auth-modal input:focus { outline:none; border-color:var(--accent); }
-        .auth-modal button { width:100%; padding:10px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:14px; font-weight:600; cursor:pointer; margin-top:6px; transition:all 0.2s; }
-        .auth-modal button:hover { background:var(--accent-hover); }
+        .auth-modal { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:28px; width:360px; }
+        .auth-modal h2 { margin-bottom:20px; font-size:22px; text-align:center; }
+        .auth-modal input { width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; font-size:14px; margin-bottom:10px; font-family:inherit; }
+        .auth-modal button { width:100%; padding:10px; background:var(--accent); border:none; border-radius:6px; color:#fff; font-size:14px; font-weight:600; cursor:pointer; margin-top:6px; }
         .auth-switch { text-align:center; margin-top:14px; color:var(--sub); font-size:12px; }
         .auth-switch span { color:var(--accent); cursor:pointer; font-weight:500; }
         .auth-error { color:#c62828; font-size:12px; text-align:center; margin-top:6px; }
         .logout-btn { background:var(--surface); border:1px solid var(--border); padding:6px 12px; border-radius:4px; color:var(--sub); cursor:pointer; font-size:12px; }
-        .logout-btn:hover { border-color:#c62828; color:#c62828; }
-        .sign-in-btn { background:var(--accent); border:none; color:#fff; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:12px; font-weight:500; }
-        .sign-in-btn:hover { background:var(--accent-hover); }
-
+        .sign-in-btn { background:var(--accent); border:none; color:#fff; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:12px; }
         .header { padding:18px 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; background:rgba(255,255,255,0.95); backdrop-filter:blur(8px); z-index:50; border-bottom:1px solid var(--border); }
-        .header-left { display:flex; align-items:center; gap:8px; }
-        .header-title { font-size:18px; font-weight:600; color:var(--text); }
+        .header-title { font-size:18px; font-weight:600; }
         .header-right { display:flex; align-items:center; gap:10px; }
         .guest-badge { color:var(--sub); font-size:12px; }
-
-        .tabs { display:flex; padding:0 24px; border-bottom:1px solid var(--border); background:var(--bg); }
-        .tab-btn { background:none; border:none; color:var(--sub); padding:8px 16px; font-size:12px; font-weight:500; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; transition:all 0.2s; }
-        .tab-btn:hover { color:var(--text); }
+        .tabs { display:flex; padding:0 24px; border-bottom:1px solid var(--border); }
+        .tab-btn { background:none; border:none; color:var(--sub); padding:8px 16px; font-size:12px; font-weight:500; cursor:pointer; border-bottom:2px solid transparent; }
         .tab-btn.active { color:var(--text); border-bottom-color:var(--accent); }
-
         .filter-bar { display:flex; gap:6px; padding:10px 24px; border-bottom:1px solid var(--border); flex-wrap:wrap; }
-        .filter-tag { padding:4px 12px; border-radius:14px; border:1px solid var(--border); cursor:pointer; font-size:11px; color:var(--sub); background:var(--surface); transition:all 0.15s; }
-        .filter-tag:hover { border-color:var(--accent); color:var(--text); }
-        .filter-tag.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-
+        .filter-tag { padding:4px 12px; border-radius:14px; border:1px solid var(--border); cursor:pointer; font-size:11px; color:var(--sub); background:var(--surface); }
+        .filter-tag.active { background:var(--accent); color:#fff; }
         .search-wrapper { padding:8px 24px; border-bottom:1px solid var(--border); }
-        .search-input { width:100%; padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:6px; color:var(--text); font-size:13px; font-family:inherit; outline:none; }
-        .search-input:focus { border-color:var(--accent); }
-
+        .search-input { width:100%; padding:8px 12px; background:var(--surface); border:1px solid var(--border); border-radius:6px; font-size:13px; outline:none; }
         .content { padding:10px 24px 100px; }
-        .list-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+        .list-header { display:flex; justify-content:space-between; margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
         .list-header-label { font-size:10px; text-transform:uppercase; letter-spacing:1px; color:var(--sub); font-weight:600; }
         .empty-state { text-align:center; padding:50px 20px; color:var(--sub); font-size:13px; }
         .level-list { display:flex; flex-direction:column; gap:1px; }
-        .level-card { background:var(--card); border:1px solid transparent; border-bottom:1px solid var(--border); padding:12px 16px; display:flex; align-items:center; gap:12px; animation:fadeIn 0.25s ease; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-        .level-card:hover { transform: scale(1.015); box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-color: var(--border); z-index: 1; }
+        .level-card { background:var(--card); border-bottom:1px solid var(--border); padding:12px 16px; display:flex; align-items:center; gap:12px; animation:fadeIn 0.25s ease; transition: transform 0.2s ease; }
+        .level-card:hover { transform: scale(1.01); }
         .level-rank { font-size:11px; color:var(--sub); font-weight:600; min-width:32px; }
-        .level-info { flex:1; min-width:0; }
         .level-name { font-weight:500; font-size:13px; }
-        .level-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:3px; }
+        .level-tags { display:flex; gap:3px; margin-top:3px; flex-wrap:wrap; }
         .level-tag { background:var(--surface); color:var(--sub); font-size:9px; padding:2px 7px; border-radius:3px; border:1px solid var(--border); }
         .level-difficulty { font-size:10px; color:var(--sub); margin-top:2px; }
-        .level-difficulty strong { color:var(--text); font-weight:500; }
-        .new-badge { font-size:9px; padding:2px 7px; border-radius:3px; font-weight:500; background:#e8f5e9; color:#2e7d32; margin-left:4px; }
-
-        .bottom-bar { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:750px; padding:12px 24px; background:rgba(255,255,255,0.95); border-top:1px solid var(--border); display:flex; gap:8px; z-index:40; }
-        .add-btn { width:36px; height:36px; border-radius:6px; background:var(--accent); border:none; color:#fff; font-size:18px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: all 0.2s ease; }
-        .add-btn:hover { background:var(--accent-hover); transform: scale(1.1); }
-
-        .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+        .new-badge { font-size:9px; padding:2px 7px; border-radius:3px; background:#e8f5e9; color:#2e7d32; margin-left:4px; }
+        .bottom-bar { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:750px; padding:12px 24px; background:rgba(255,255,255,0.95); border-top:1px solid var(--border); display:none; z-index:40; }
+        .add-btn { width:36px; height:36px; border-radius:6px; background:var(--accent); border:none; color:#fff; font-size:18px; cursor:pointer; }
+        .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; z-index:100; opacity:0; pointer-events:none; }
         .modal-overlay.active { opacity:1; pointer-events:all; }
-        .modal { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:22px 24px; width:380px; box-shadow:0 4px 20px rgba(0,0,0,0.08); animation:slideDown 0.2s ease; }
-        .modal h2 { font-size:15px; margin-bottom:14px; font-weight:500; }
-        .modal label { display:block; font-size:10px; color:var(--sub); margin-bottom:3px; margin-top:12px; text-transform:uppercase; letter-spacing:0.6px; font-weight:500; }
-        .modal input { width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:4px; color:var(--text); font-size:13px; font-family:inherit; outline:none; }
-        .modal input:focus { border-color:var(--accent); }
-        .modal-hint { font-size:9px; color:var(--sub); margin-top:2px; }
+        .modal { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:22px 24px; width:380px; }
+        .modal h2 { font-size:15px; margin-bottom:14px; }
+        .modal label { display:block; font-size:10px; color:var(--sub); margin:12px 0 3px; text-transform:uppercase; }
+        .modal input { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:4px; font-size:13px; }
         .modal-buttons { display:flex; gap:6px; margin-top:18px; justify-content:flex-end; }
-        .modal-buttons button { padding:7px 16px; border-radius:4px; border:none; cursor:pointer; font-size:12px; font-weight:500; font-family:inherit; }
-        .btn-cancel { background:var(--surface); color:var(--text); border:1px solid var(--border); }
-        .btn-ok { background:var(--accent); color:#fff; }
-        .btn-ok:hover { background:var(--accent-hover); }
-
-        .tag-input-wrapper { position:relative; }
-        .tag-suggestions { position:absolute; top:100%; left:0; right:0; background:var(--bg); border:1px solid var(--border); border-radius:0 0 4px 4px; max-height:120px; overflow-y:auto; z-index:101; display:none; }
+        .btn-cancel { background:var(--surface); border:1px solid var(--border); padding:7px 16px; border-radius:4px; cursor:pointer; }
+        .btn-ok { background:var(--accent); color:#fff; border:none; padding:7px 16px; border-radius:4px; cursor:pointer; }
+        .tag-suggestions { position:absolute; top:100%; left:0; right:0; background:var(--bg); border:1px solid var(--border); max-height:120px; overflow-y:auto; z-index:101; display:none; }
         .tag-suggestions.show { display:block; }
-        .tag-suggestion-item { padding:7px 10px; font-size:11px; cursor:pointer; color:var(--text); }
-        .tag-suggestion-item:hover { background:var(--surface); }
+        .tag-suggestion-item { padding:7px 10px; font-size:11px; cursor:pointer; }
     </style>
 </head>
 <body>
-
 <div class="app" id="app">
     <div class="header">
         <div class="header-left"><div class="header-title">I Wanna Maker <span style="color:var(--sub);font-weight:400;">— Level List</span></div></div>
-        <div class="header-right" id="headerRight">
+        <div class="header-right">
             <span class="guest-badge" id="guestBadge">Guest</span>
             <button class="sign-in-btn" id="signInBtn">Sign In</button>
             <button class="logout-btn" id="logoutBtn" style="display:none;">Exit</button>
         </div>
     </div>
-
-    <div class="tabs" id="tabs">
+    <div class="tabs">
         <button class="tab-btn active" data-tab="all">All</button>
         <button class="tab-btn" data-tab="new">New</button>
     </div>
-
-    <div class="filter-bar" id="filterBar">
-        <span class="filter-tag active" data-tag="">All</span>
-    </div>
-
-    <div class="search-wrapper">
-        <input type="text" class="search-input" id="searchInput" placeholder="Search by name or tag...">
-    </div>
-
-    <div class="content" id="content">
-        <div class="list-header"><span class="list-header-label" id="listHeaderLabel">Levels</span><span class="list-header-label" style="font-size:9px;" id="listCount">0</span></div>
+    <div class="filter-bar" id="filterBar"><span class="filter-tag active" data-tag="">All</span></div>
+    <div class="search-wrapper"><input type="text" class="search-input" id="searchInput" placeholder="Search by name or tag..."></div>
+    <div class="content">
+        <div class="list-header"><span class="list-header-label" id="listHeaderLabel">Levels</span><span style="font-size:9px;color:var(--sub);" id="listCount">0</span></div>
         <div class="empty-state" id="emptyState">List is empty</div>
         <div class="level-list" id="levelList"></div>
     </div>
 </div>
-
-<div class="bottom-bar" id="bottomBar" style="display:none;">
-    <button class="add-btn" id="addBtn">+</button>
-</div>
-
+<div class="bottom-bar" id="bottomBar"><button class="add-btn" id="addBtn">+</button></div>
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
-        <h2 id="modalTitle">New Level</h2>
+        <h2>New Level</h2>
         <label>Name</label><input type="text" id="levelNameInput" placeholder="Enter name">
-        <label>Difficulty</label><input type="number" id="levelDifficultyInput" placeholder="0" min="0" step="1">
-        <label>Tags</label>
-        <div class="tag-input-wrapper"><input type="text" id="levelTagsInput" placeholder="e.g. needle, boss" autocomplete="off"><div class="tag-suggestions" id="tagSuggestions"></div></div>
-        <p class="modal-hint">Separate tags with commas</p>
+        <label>Difficulty</label><input type="number" id="levelDifficultyInput" placeholder="0" min="0">
+        <label>Tags</label><input type="text" id="levelTagsInput" placeholder="e.g. needle, boss">
+        <div class="tag-suggestions" id="tagSuggestions"></div>
+        <p style="font-size:9px;color:var(--sub);margin-top:2px;">Separate tags with commas</p>
         <div class="modal-buttons"><button class="btn-cancel" id="modalCancel">Cancel</button><button class="btn-ok" id="modalOk">OK</button></div>
     </div>
 </div>
-
 <div class="auth-overlay" id="authOverlay" style="display:none;">
     <div class="auth-modal">
         <h2>I Wanna Maker List</h2>
@@ -150,120 +105,68 @@
         <div class="auth-error" id="authError"></div>
     </div>
 </div>
-
 <script>
-const SUPABASE_URL = 'https://msnijweenzlyqvcjhefx.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_Rdz9P50sdBvpscdi79cYZg_xHndxy1B';
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-let currentUser = null, isAdmin = false, currentTab = 'all', activeFilter = '';
-let levels = [], allTags = [], levelTags = {};
-
-const $ = id => document.getElementById(id);
-function escapeHTML(s) { const d = document.createElement('div'); d.textContent = s||''; return d.innerHTML; }
-function sortLevels(a, b) { if (currentTab==='new') return new Date(b.created_at||0) - new Date(a.created_at||0); if (+b.difficulty !== +a.difficulty) return +b.difficulty - +a.difficulty; return (a.title||'').localeCompare(b.title||''); }
-function getSorted(source) { return (source||[]).slice().sort(sortLevels); }
-function getTags(id) { return levelTags[id] || []; }
-function setTags(id, tags) { const c = tags.map(t => t.trim().toLowerCase()).filter(t => t); levelTags[id] = c; c.forEach(t => { if (!allTags.includes(t)) allTags.push(t); }); }
-function isNew(level) { return level.created_at && (new Date() - new Date(level.created_at)) < 7 * 24 * 60 * 60 * 1000; }
-
-async function loadLevelsFromDB() {
-    try {
-        const { data, error } = await sb.from('levels').select('*').order('created_at', { ascending: false });
-        if (error) { console.error(error); return; }
-        levels = (data||[]).map(l => ({...l, name:l.title, difficulty:l.difficulty}));
-        levels.forEach(l => { if (l.tags && !levelTags[l.id]) levelTags[l.id] = l.tags.split(',').map(t => t.trim()).filter(t => t); });
-        allTags = [];
-        levels.forEach(l => getTags(l.id).forEach(t => { if (!allTags.includes(t)) allTags.push(t); }));
-    } catch(e) { console.error(e); }
+const sb = window.supabase.createClient('https://msnijweenzlyqvcjhefx.supabase.co','sb_publishable_Rdz9P50sdBvpscdi79cYZg_xHndxy1B');
+let currentUser=null,isAdmin=false,currentTab='all',activeFilter='',levels=[],allTags=[],levelTags={};
+const $=id=>document.getElementById(id);
+function esc(s){const d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+function sortLvls(a,b){if(currentTab==='new')return new Date(b.created_at||0)-new Date(a.created_at||0);if(+b.difficulty!==+a.difficulty)return +b.difficulty-+a.difficulty;return (a.title||'').localeCompare(b.title||'');}
+function getTags(id){return levelTags[id]||[];}
+function isNew(l){return l.created_at&&(new Date()-new Date(l.created_at))<7*24*60*60*1000;}
+async function loadLevels(){
+    const{data}=await sb.from('levels').select('*');
+    levels=(data||[]).map(l=>({...l,name:l.title}));
+    levels.forEach(l=>{if(l.tags&&!levelTags[l.id])levelTags[l.id]=l.tags.split(',').map(t=>t.trim()).filter(t=>t);});
+    allTags=[];levels.forEach(l=>getTags(l.id).forEach(t=>{if(!allTags.includes(t))allTags.push(t);}));
 }
-
-async function addLevelToDB(name, difficulty, tags) {
-    try {
-        const { data, error } = await sb.from('levels').insert({
-            title: name,
-            difficulty: parseInt(difficulty)||0,
-            tags: tags.join(','),
-            points: 0,
-            created_at: new Date().toISOString()
-        }).select().single();
-        if (error) { console.error(error); alert('Error: '+error.message); return; }
-        if (data) { data.name=data.title; data.difficulty=data.difficulty; levels.unshift(data); setTags(data.id, tags); }
-    } catch(er) { console.error(er); }
+async function addLevel(name,diff,tags){
+    const{error}=await sb.from('levels').insert({title:name,difficulty:parseInt(diff)||0,tags:tags.join(','),points:0,created_at:new Date().toISOString()});
+    if(error){alert(error.message);return;}
+    await loadLevels();render();
 }
-
-function renderCurrentTab() {
-    if ($('listHeaderLabel')) $('listHeaderLabel').textContent = currentTab==='new'?'New Levels':'Levels';
-    renderLevels();
-    updateFilters();
+function render(){
+    $('listHeaderLabel').textContent=currentTab==='new'?'New Levels':'Levels';
+    const list=$('levelList'),q=($('searchInput')?.value||'').toLowerCase();
+    list.innerHTML='';
+    if(!levels.length){$('emptyState').style.display='block';list.style.display='none';$('listCount').textContent='0';return;}
+    let f=levels.filter(l=>{if(currentTab==='new'&&!isNew(l))return false;return (l.title||'').toLowerCase().includes(q)||getTags(l.id).some(t=>t.includes(q))||(!activeFilter||getTags(l.id).includes(activeFilter));});
+    f.sort(sortLvls);
+    if(!f.length){$('emptyState').style.display='block';list.style.display='none';$('listCount').textContent='0';return;}
+    $('emptyState').style.display='none';list.style.display='flex';$('listCount').textContent=f.length;
+    f.forEach((l,i)=>{
+        const c=document.createElement('div');c.className='level-card';
+        const tags=getTags(l.id),tHTML=tags.length?'<div class="level-tags">'+tags.map(t=>`<span class="level-tag">${esc(t)}</span>`).join('')+'</div>':'';
+        c.innerHTML=`<span class="level-rank">${currentTab==='new'?'':'#'+(i+1)}</span><div class="level-info"><div class="level-name">${esc(l.title)}${isNew(l)?'<span class="new-badge">NEW</span>':''}</div>${tHTML}<div class="level-difficulty">difficulty: <strong>${parseInt(l.difficulty||0)}</strong></div></div>`;
+        list.appendChild(c);
+    });
+    const bar=$('filterBar');bar.innerHTML='<span class="filter-tag'+(activeFilter===''?' active':'')+'" data-tag="">All</span>';
+    allTags.forEach(t=>{bar.innerHTML+=`<span class="filter-tag${activeFilter===t?' active':''}" data-tag="${t}">${t}</span>`;});
+    bar.querySelectorAll('.filter-tag').forEach(el=>el.addEventListener('click',function(){activeFilter=this.dataset.tag;render();}));
 }
-function renderLevels() {
-    const list = $('levelList'); if (!list) return;
-    const q = ($('searchInput')?.value||'').toLowerCase();
-    list.innerHTML = '';
-    if (!levels.length) { if ($('emptyState')) { $('emptyState').style.display='block'; } list.style.display='none'; if ($('listCount')) $('listCount').textContent='0'; return; }
-    let filtered = levels.filter(l => {
-        if (currentTab==='new' && !isNew(l)) return false;
-        const matchName = (l.title||'').toLowerCase().includes(q);
-        const matchTag = getTags(l.id).some(t => t.includes(q));
-        const matchFilter = !activeFilter || getTags(l.id).includes(activeFilter);
-        return (matchName||matchTag) && matchFilter;
+document.addEventListener('DOMContentLoaded',()=>{
+    $('searchInput').addEventListener('input',render);
+    $('addBtn').addEventListener('click',()=>{if(!isAdmin)return;$('levelNameInput').value='';$('levelDifficultyInput').value='';$('levelTagsInput').value='';$('modalOverlay').classList.add('active');});
+    $('modalCancel').addEventListener('click',()=>$('modalOverlay').classList.remove('active'));
+    $('modalOk').addEventListener('click',async()=>{
+        const name=$('levelNameInput').value.trim(),diff=$('levelDifficultyInput').value,tagsS=$('levelTagsInput').value.trim(),tags=tagsS?tagsS.split(',').map(t=>t.trim().toLowerCase()).filter(t=>t):[];
+        if(!name||isNaN(parseInt(diff)))return;
+        await addLevel(name,diff,tags);$('modalOverlay').classList.remove('active');render();
     });
-    const sorted = getSorted(filtered);
-    if (!sorted.length) { if ($('emptyState')) { $('emptyState').style.display='block'; } list.style.display='none'; if ($('listCount')) $('listCount').textContent='0'; return; }
-    if ($('emptyState')) $('emptyState').style.display='none'; list.style.display='flex'; if ($('listCount')) $('listCount').textContent = sorted.length;
-    sorted.forEach((l, i) => {
-        const rank = currentTab==='new'?'':i+1;
-        const card = document.createElement('div'); card.className = 'level-card';
-        const tags = getTags(l.id), tagsHTML = tags.length ? '<div class="level-tags">'+tags.map(t=>`<span class="level-tag">${escapeHTML(t)}</span>`).join('')+'</div>' : '';
-        const newBadge = isNew(l) ? '<span class="new-badge">NEW</span>' : '';
-        card.innerHTML = `<span class="level-rank">${rank?'#'+rank:''}</span><div class="level-info"><div class="level-name">${escapeHTML(l.title||l.name)}${newBadge}</div>${tagsHTML}<div class="level-difficulty">difficulty: <strong>${parseInt(l.difficulty||0)}</strong></div></div>`;
-        list.appendChild(card);
+    $('signInBtn').addEventListener('click',()=>$('authOverlay').style.display='flex');
+    let isLogin=true;
+    $('authSwitchBtn').addEventListener('click',()=>{isLogin=!isLogin;$('authSubmitBtn').textContent=isLogin?'Sign In':'Create Account';$('authSwitchBtn').textContent=isLogin?'Create account':'Back to sign in';});
+    $('authSubmitBtn').addEventListener('click',async()=>{
+        const e=$('authEmail').value.trim(),p=$('authPassword').value;
+        if(!e||!p){$('authError').textContent='Enter email and password';return;}
+        if(isLogin){const{data,error}=await sb.auth.signInWithPassword({email:e,password:p});if(error){$('authError').textContent=error.message;return;}currentUser=data.user;await loadUser();$('authOverlay').style.display='none';showLoggedIn();}
+        else{const{data,error}=await sb.auth.signUp({email:e,password:p});if(error){$('authError').textContent=error.message;return;}if(data.user){currentUser=data.user;await sb.from('profiles').insert({id:currentUser.id,username:e.split('@')[0],total_score:0,levels_completed:0});await loadUser();$('authOverlay').style.display='none';showLoggedIn();}}
     });
-}
-function updateFilters() {
-    const bar = $('filterBar'); if (!bar) return;
-    bar.innerHTML = '<span class="filter-tag'+(activeFilter===''?' active':'')+'" data-tag="">All</span>';
-    allTags.forEach(tag => { bar.innerHTML += `<span class="filter-tag${activeFilter===tag?' active':''}" data-tag="${tag}">${tag}</span>`; });
-    bar.querySelectorAll('.filter-tag').forEach(el => el.addEventListener('click', function() { activeFilter = this.dataset.tag; renderCurrentTab(); }));
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    if ($('searchInput')) $('searchInput').addEventListener('input', renderCurrentTab);
-    if ($('addBtn')) $('addBtn').addEventListener('click', () => { if (!isAdmin) return; if ($('modalTitle')) $('modalTitle').textContent='New Level'; if ($('levelNameInput')) $('levelNameInput').value=''; if ($('levelDifficultyInput')) $('levelDifficultyInput').value=''; if ($('levelTagsInput')) $('levelTagsInput').value=''; if ($('modalOk')) $('modalOk').textContent='OK'; if ($('modalOverlay')) { $('modalOverlay').classList.add('active'); } });
-    if ($('modalCancel')) $('modalCancel').addEventListener('click', ()=>$('modalOverlay').classList.remove('active'));
-    if ($('modalOk')) $('modalOk').addEventListener('click', async () => {
-        const name=($('levelNameInput')?.value||'').trim();
-        const diff=parseInt($('levelDifficultyInput')?.value||0);
-        const tagsS=($('levelTagsInput')?.value||'').trim();
-        const tags=tagsS?tagsS.split(',').map(t=>t.trim().toLowerCase()).filter(t=>t):[];
-        if(!name||isNaN(diff)) return;
-        await addLevelToDB(name, diff, tags);
-        if ($('modalOverlay')) $('modalOverlay').classList.remove('active');
-        renderCurrentTab();
-    });
-    if ($('levelTagsInput')) $('levelTagsInput').addEventListener('input', function() {
-        const v=this.value,li=v.lastIndexOf(','),after=li>=0?v.substring(li+1).trim():v.trim(),parts=v.split(',').map(p=>p.trim().toLowerCase());
-        if(!after){if($('tagSuggestions'))$('tagSuggestions').classList.remove('show');return;}
-        const used=new Set(parts.filter(p=>p)),filtered=allTags.filter(t=>t.startsWith(after.toLowerCase())&&!used.has(t));
-        if(!filtered.length){if($('tagSuggestions'))$('tagSuggestions').classList.remove('show');return;}
-        if($('tagSuggestions')){$('tagSuggestions').innerHTML='';filtered.slice(0,6).forEach(tag=>{const el=document.createElement('div');el.className='tag-suggestion-item';el.textContent=tag;el.addEventListener('mousedown',e=>{e.preventDefault();const np=parts.slice(0,-1);np.push(tag);$('levelTagsInput').value=np.join(', ')+', ';$('tagSuggestions').classList.remove('show');$('levelTagsInput').focus();});$('tagSuggestions').appendChild(el);});$('tagSuggestions').classList.add('show');}
-    });
-    document.addEventListener('click',e=>{if($('levelTagsInput')&&$('tagSuggestions')&&!$('levelTagsInput').contains(e.target)&&!$('tagSuggestions').contains(e.target))$('tagSuggestions').classList.remove('show');});
-    if ($('signInBtn')) $('signInBtn').addEventListener('click',()=>$('authOverlay').style.display='flex');
-    let isLoginMode=true;
-    if ($('authSwitchBtn')) $('authSwitchBtn').addEventListener('click',()=>{isLoginMode=!isLoginMode;if($('authSubmitBtn'))$('authSubmitBtn').textContent=isLoginMode?'Sign In':'Create Account';if($('authSwitchBtn'))$('authSwitchBtn').textContent=isLoginMode?'Create account':'Back to sign in';if($('authError'))$('authError').textContent='';});
-    if ($('authSubmitBtn')) $('authSubmitBtn').addEventListener('click',async()=>{
-        const email=($('authEmail')?.value||'').trim(),pw=$('authPassword')?.value||'';
-        if(!email||!pw){if($('authError'))$('authError').textContent='Enter email and password';return;}
-        if(isLoginMode){const{data,error}=await sb.auth.signInWithPassword({email,password:pw});if(error){if($('authError'))$('authError').textContent=error.message;return;}currentUser=data.user;isAdmin=(email==='твояпочта@gmail.com');await loadLevelsFromDB();if($('authOverlay'))$('authOverlay').style.display='none';showLoggedIn();}
-        else{const{data,error}=await sb.auth.signUp({email,password:pw});if(error){if($('authError'))$('authError').textContent=error.message;return;}if(data.user){currentUser=data.user;isAdmin=(email==='твояпочта@gmail.com');try{await sb.from('profiles').insert({id:currentUser.id,username:email.split('@')[0],total_score:0,levels_completed:0});}catch(er){}await loadLevelsFromDB();if($('authOverlay'))$('authOverlay').style.display='none';showLoggedIn();}}
-    });
-    if ($('logoutBtn')) $('logoutBtn').addEventListener('click',async()=>{await sb.auth.signOut();location.reload();});
-    document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', function() { document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active')); this.classList.add('active'); currentTab = this.dataset.tab; renderCurrentTab(); }));
-    (async function init() { try { const {data:{session}} = await sb.auth.getSession(); if (session) { currentUser=session.user; isAdmin=(session.user.email==='твояпочта@gmail.com'); await loadLevelsFromDB(); showLoggedIn(); } else { await loadLevelsFromDB(); renderCurrentTab(); } } catch(e) { await loadLevelsFromDB(); renderCurrentTab(); } })();
+    $('logoutBtn').addEventListener('click',async()=>{await sb.auth.signOut();location.reload();});
+    document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',function(){document.querySelectorAll('.tab-btn').forEach(x=>x.classList.remove('active'));this.classList.add('active');currentTab=this.dataset.tab;render();}));
+    (async()=>{const{data:{session}}=await sb.auth.getSession();if(session){currentUser=session.user;await loadUser();showLoggedIn();}else{await loadLevels();render();}})();
 });
-function showLoggedIn() { if ($('guestBadge')) $('guestBadge').style.display='none'; if ($('signInBtn')) $('signInBtn').style.display='none'; if ($('logoutBtn')) $('logoutBtn').style.display='block'; if(isAdmin){ if ($('bottomBar')) $('bottomBar').style.display='flex'; } renderCurrentTab(); }
+async function loadUser(){const{data:p}=await sb.from('profiles').select('username').eq('id',currentUser.id).maybeSingle();isAdmin=p&&p.username==='admin';await loadLevels();}
+function showLoggedIn(){$('guestBadge').style.display='none';$('signInBtn').style.display='none';$('logoutBtn').style.display='block';if(isAdmin)$('bottomBar').style.display='flex';render();}
 </script>
 </body>
 </html>
